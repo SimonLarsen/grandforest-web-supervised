@@ -1,0 +1,152 @@
+library(shiny)
+library(shinythemes)
+library(shinydashboard)
+library(shinysky)
+library(visNetwork)
+
+source("grandforest-web-common/enrichment.R")
+
+shinyUI(navbarPage("Grand Forest • Supervised", theme=shinytheme("cosmo"),
+  footer=column(width=12, hr(), p("Grand Forest • Supervised workflow • Version 0.1")),
+  tabPanel("Analysis",
+    tags$head(
+      tags$link(rel="stylesheet", type="text/css", href="style.css")
+    ),
+    sidebarLayout(
+      sidebarPanel(width = 3,
+        h3("Train model"),
+        fileInput("file", "Expression table (.csv file)", accept="text/csv"),
+        selectInput("modelType", "Model type", list(
+          "Classification" = "classification",
+          "Regression" = "regression",
+          "Probability" = "probability"
+        )),
+        textInput("depvar", "Dependent variable name"),
+        numericInput("ntrees", "Number of decision trees", DEFAULT_NUM_TREES, min = MIN_NUM_TREES, max = MAX_NUM_TREES),
+        selectInput("graph", "Genetic interaction network", list(
+          "IID, Human, Experimental only" = "iidexp",
+          "IID, Human" = "iidall",
+          "RegNetwork" = "regnetwork",
+          "BioGRID" = "biogrid",
+          "HTRIdb" = "htri"
+        )),
+        actionButton("submitButton", "Train grand forest", styleclass = "primary")
+      ),
+      mainPanel(
+        conditionalPanel("output.hasModel == true",
+          tabsetPanel(id="mainTabs", type="pills",
+            tabPanel("Analysis",
+              tags$div(class="page-header", h2("Analysis")),
+              fluidRow(
+                column(width=6,
+                  h3("Model summary"),
+                  wellPanel(
+                    uiOutput("summary")
+                  ),
+                  h3("Parameters"),
+                  wellPanel(
+                    sliderInput("nfeatures", "Number of top features to show in graph and heatmap", min=MIN_NUM_FEATURES, max=MAX_NUM_FEATURES, value=DEFAULT_NUM_FEATURES, step=1, width = "400px")
+                  )
+                ),
+                column(width=6,
+                  h3("Feature subgraph"),
+                  wellPanel(
+                    visNetworkOutput("featureGraph"),
+                    fluidRow(
+                      column(width=4, downloadButton("dlFeatureGraph", "Download network", class="btn-sm")),
+                      column(width=4, checkboxInput("featureGraphGeneSymbols", "Show gene symbols", value=TRUE))
+                    )
+                  )
+                )
+              ),
+              fluidRow(
+                column(width=6,
+                  h3("Heatmap"),
+                  wellPanel(
+                    plotOutput("featureHeatmap", height=500),
+                    downloadButton("dlFeatureHeatmap", "Download heatmap", class="btn-sm")
+                  )
+                ),
+                column(width=6,
+                  h3("Feature table"),
+                  wellPanel(
+                    dataTableOutput("featureTable"),
+                    downloadButton("dlFeatureTable", "Download table", class="btn-sm"),
+                    downloadButton("dlFeatureTableFull", "Download full table", class="btn-sm")
+                  )
+                )
+              ),
+              h3("Gene set enrichment"),
+              wellPanel(
+                fluidRow(
+                  column(width=4, selectInput("enrichmentType", "Enrichment type", gene_set_enrichment_types())),
+                  column(width=4, numericInput("enrichmentPvalueCutoff", "p-value cutoff", value=0.05, min=0, max=1, step=0.01)),
+                  column(width=4, numericInput("enrichmentQvalueCutoff", "q-value cutoff", value=0.2, min=0, max=1, step=0.01))
+                ),
+                actionButton("enrichmentButton", "Run enrichment analysis", styleclass="primary"),
+                conditionalPanel("output.hasEnrichmentTable == true",
+                  hr(),
+                  tabsetPanel(
+                    tabPanel("Table",
+                      dataTableOutput("enrichmentTable"),
+                      downloadButton("dlEnrichmentTable", "Download table", class="btn-sm")
+                    ),
+                    tabPanel("Plot",
+                      plotOutput("enrichmentPlot")
+                    )
+                  )
+                )
+              )
+            ),
+            tabPanel("Evaluation",
+              tags$div(class="page-header",
+                h2("Evaluation")
+              ),
+              h3("Parameters"),
+              wellPanel(
+                fluidRow(
+                  column(width=4, numericInput("cvFolds", "Number of cross-validation folds", min=2, max=10, value=5)),
+                  column(width=4, numericInput("cvRepetitions", "Number of repetitions", min=1, max=5, value=1)),
+                  column(width=4, numericInput("cvTrees", "Number of decision trees", min=MIN_NUM_TREES, max=MAX_NUM_TREES, value=DEFAULT_NUM_TREES))
+                ),
+                actionButton("evaluationButton", "Run evaluation", styleclass = "primary")
+              ),
+              h3("Results"),
+              fluidRow(
+                column(width=6,
+                  h4("Classification performance"),
+                  wellPanel(plotOutput("evaluationPerformance"))
+                ),
+                column(width=6,
+                  h4("Feature stability"),
+                  wellPanel(plotOutput("evaluationStability"))
+                )
+              )
+            ),
+            tabPanel("Prediction",
+              tags$div(class="page-header", h2("Prediction")),
+              fluidRow(
+                column(width = 4,
+                  wellPanel(
+                    fileInput("predictFile", "Prediction data (.csv file)", accept="text/csv"),
+                    actionButton("predictButton", "Predict", styleclass="primary")
+                  )
+                ),
+                column(width = 8,
+                  conditionalPanel("output.hasPredictions == true",
+                    wellPanel(
+                      dataTableOutput("predictionsTable"),
+                      downloadButton("dlPredictionsTable", "Download table", class="btn-sm")
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  ),
+  tabPanel("User guide"),
+  tabPanel("Cite")
+))

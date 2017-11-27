@@ -1,0 +1,11 @@
+options(shiny.maxRequestSize=400*1024^2)
+options(spinner.type=5)
+
+MIN_NUM_TREES <- 100
+MAX_NUM_TREES <- 5000
+DEFAULT_NUM_TREES <- 2000
+
+MIN_NUM_FEATURES <- 2
+MAX_NUM_FEATURES <- 100
+DEFAULT_NUM_FEATURES <- 20
+

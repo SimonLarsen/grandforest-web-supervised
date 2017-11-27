@@ -1,0 +1,3 @@
+[submodule "grandforest-web-common"]
+	path = grandforest-web-common
+	url = https://github.com/SimonLarsen/grandforest-web-common.git

@@ -1,0 +1,48 @@
+body {
+  background-color: #f5f5f5;
+}
+
+.well {
+  background-color: #ffffff;
+}
+
+#mainTabs > li > a {
+  font-size: 20px;
+}
+
+#shiny-notification-panel {
+  bottom: initial;
+  top: 0;
+  width: 300px;
+}
+
+.progress {
+  height: 16px;
+}
+
+.progress .progress-bar {
+  font-size: 14px;
+  line-height: 16px;
+}
+
+.shiny-progress-notification .progress {
+  height: 16px;
+}
+
+.shiny-progress-notification .progress-text .progress-message {
+  font-size: 100%;
+  display: block;
+}
+
+.shiny-progress-notification .progress-text .progress-detail {
+  font-size: 100%;
+  display: block;
+}
+
+.shiny-notification-error {
+  font-weight: bold;
+}
+
+#enrichmentTable table {
+  white-space: nowrap;
+}
