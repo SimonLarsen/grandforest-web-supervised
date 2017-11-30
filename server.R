@@ -214,11 +214,13 @@ shinyServer(function(input, output, session) {
   })
   
   output$enrichmentTable <- renderDataTable({
-    req(as.data.frame(currentEnrichmentTable()))
+    D <- req(as.data.frame(currentEnrichmentTable()))
+    D$ID <- gene_set_enrichment_get_links(D$ID, isolate(input$enrichmentType))
+    return(D)
   }, options = list(
     pageLength = 10,
     scrollX = TRUE
-  ))
+  ), escape = FALSE)
   
   output$enrichmentPlot <- renderPlot({
     D <- req(currentEnrichmentTable())
