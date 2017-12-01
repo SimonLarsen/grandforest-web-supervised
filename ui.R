@@ -14,7 +14,7 @@ shinyUI(navbarPage("Grand Forest • Supervised", theme=shinytheme("cosmo"),
     ),
     sidebarLayout(
       sidebarPanel(width = 3,
-        h3("Train model"),
+        tags$h3("Train model", class="sidebar-top-heading"),
         fileInput("file", "Expression table (.csv file)", accept="text/csv"),
         selectInput("modelType", "Model type", list(
           "Classification" = "classification",
@@ -45,11 +45,11 @@ shinyUI(navbarPage("Grand Forest • Supervised", theme=shinytheme("cosmo"),
                   ),
                   h3("Parameters"),
                   wellPanel(
-                    sliderInput("nfeatures", "Number of top features to show in graph and heatmap", min=MIN_NUM_FEATURES, max=MAX_NUM_FEATURES, value=DEFAULT_NUM_FEATURES, step=1, width = "400px")
+                    sliderInput("nfeatures", "Number of top features to show in network and heatmap", min=MIN_NUM_FEATURES, max=MAX_NUM_FEATURES, value=DEFAULT_NUM_FEATURES, step=1, width = "400px")
                   )
                 ),
                 column(width=6,
-                  h3("Feature subgraph"),
+                  h3("Feature subnetwork"),
                   wellPanel(
                     visNetworkOutput("featureGraph"),
                     fluidRow(
