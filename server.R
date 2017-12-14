@@ -42,7 +42,7 @@ shinyServer(function(input, output, session) {
   outputOptions(output, "hasPredictions", suspendWhenHidden=FALSE)
   
   observeEvent(input$submitButton, {
-    if(!isTruthy(input$file)) {
+    if(!input$useExampleData && !isTruthy(input$file)) {
       showNotification("Please select an expression data file and wait for it upload before submitting", type="error")
       return()
     }
@@ -50,7 +50,7 @@ shinyServer(function(input, output, session) {
       showNotification(paste0("Number of trees must be >= ", MIN_NUM_TREES, " and <= ", MAX_NUM_TREES, "."), type="error")
       return()
     }
-    if(input$depvar == "") {
+    if(!input$useExampleData && input$depvar == "") {
       showNotification("Missing dependent variable name.", type="error")
       return()
     }
@@ -58,9 +58,14 @@ shinyServer(function(input, output, session) {
     withProgress(value=0, message="Training grand forest", {
       # Read data file
       setProgress(value=0, detail="Reading data file")
-      D <- fread(input$file$datapath, header=TRUE, sep=",")
+      if(input$useExampleData) {
+        D <- readRDS(EXAMPLE_DATA_PATH)
+        depvar <- EXAMPLE_DATA_DEPVAR
+      } else {
+        D <- fread(input$file$datapath, header=TRUE, sep=",")
+        depvar <- input$depvar
+      }
       
-      depvar <- input$depvar
       if((!depvar %in% colnames(D))) {
         showNotification("Dependent variable name does not match any column name in data file.", type="error")
         return()

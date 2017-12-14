@@ -1,6 +1,5 @@
 library(shiny)
 library(shinythemes)
-library(shinydashboard)
 library(shinysky)
 library(visNetwork)
 
@@ -15,13 +14,16 @@ shinyUI(navbarPage("Grand Forest • Supervised", theme=shinytheme("cosmo"),
     sidebarLayout(
       sidebarPanel(width = 3,
         tags$h3("Train model", class="sidebar-top-heading"),
-        fileInput("file", "Expression table (.csv file)", accept="text/csv"),
-        selectInput("modelType", "Model type", list(
-          "Classification" = "classification",
-          "Regression" = "regression",
-          "Probability" = "probability"
-        )),
-        textInput("depvar", "Dependent variable name"),
+        checkboxInput("useExampleData", "Use example data"),
+        conditionalPanel("input.useExampleData == false",
+          fileInput("file", "Expression table (.csv file)", accept="text/csv"),
+          selectInput("modelType", "Model type", list(
+            "Classification" = "classification",
+            "Regression" = "regression",
+            "Probability" = "probability"
+          )),
+          textInput("depvar", "Dependent variable name")
+        ),
         numericInput("ntrees", "Number of decision trees", DEFAULT_NUM_TREES, min = MIN_NUM_TREES, max = MAX_NUM_TREES),
         selectInput("graph", "Genetic interaction network", list(
           "IID, Human, Experimental only" = "iidexp",
