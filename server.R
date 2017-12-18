@@ -61,9 +61,11 @@ shinyServer(function(input, output, session) {
       if(input$useExampleData) {
         D <- readRDS(EXAMPLE_DATA_PATH)
         depvar <- EXAMPLE_DATA_DEPVAR
+        modelType <- EXAMPLE_DATA_MODELTYPE
       } else {
         D <- fread(input$file$datapath, header=TRUE, sep=",")
         depvar <- input$depvar
+        modelType <- input$modelType
       }
       
       if((!depvar %in% colnames(D))) {
@@ -83,7 +85,7 @@ shinyServer(function(input, output, session) {
       colnames(D)[1] <- depvar
       
       # convert dependent variable to correct type
-      if(input$modelType == "classification" || input$modelType == "probability") {
+      if(modelType == "classification" || modelType == "probability") {
         D[[depvar]] <- as.factor(D[[depvar]])
       } else {
         D[[depvar]] <- as.numeric(D[[depvar]])
@@ -101,14 +103,14 @@ shinyServer(function(input, output, session) {
       fit <- grandforest(
         data=D, graph_data=edges,
         dependent.variable.name=depvar,
-        probability=(input$modelType=="probability"),
+        probability=(modelType=="probability"),
         num.trees=input$ntrees,
         importance="impurity"
       )
       
       setProgress(value=0.9, detail="Finishing up")
       currentData(D)
-      currentModel(list(fit=fit, depvar=depvar, type=input$modelType))
+      currentModel(list(fit=fit, depvar=depvar, type=modelType))
       currentEvaluation(NULL)
       currentPredictions(NULL)
     })

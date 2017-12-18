@@ -11,3 +11,4 @@ DEFAULT_NUM_FEATURES <- 20
 
 EXAMPLE_DATA_PATH <- "data/aces.dmfs.rds"
 EXAMPLE_DATA_DEPVAR <- "dmfs"
+EXAMPLE_DATA_MODELTYPE <- "classification"
