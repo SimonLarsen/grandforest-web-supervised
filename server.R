@@ -1,4 +1,5 @@
 library(shiny)
+library(shinyjs)
 library(shinysky)
 library(visNetwork)
 library(data.table)
