@@ -348,4 +348,6 @@ shinyServer(function(input, output, session) {
       write.csv(as.data.frame(currentEnrichmentTable()), file, row.names=FALSE)
     }
   )
+  
+  hide(id="loading-content", anim=TRUE, animType="fade")
 })
