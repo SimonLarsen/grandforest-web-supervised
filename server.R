@@ -109,9 +109,19 @@ shinyServer(function(input, output, session) {
         importance="impurity"
       )
       
+      all_nodes <- unique(c(edges$from, edges$to))
+      found_genes <- intersect(colnames(D), all_nodes)
+      missing_genes <- setdiff(setdiff(colnames(D), depvar), all_nodes)
+      
       setProgress(value=0.9, detail="Finishing up")
       currentData(D)
-      currentModel(list(fit=fit, depvar=depvar, type=modelType))
+      currentModel(list(
+        fit=fit,
+        depvar=depvar,
+        type=modelType,
+        found_genes=found_genes,
+        missing_genes=missing_genes
+      ))
       currentEvaluation(NULL)
       currentPredictions(NULL)
     })
@@ -154,13 +164,18 @@ shinyServer(function(input, output, session) {
     model <- req(currentModel())
     fit <- model$fit
     depvar <- model$depvar
+    found_pct <- length(model$found_genes) / fit$num.independent.variables * 100
     tag("dl", list(class="dl-horizontal",
       tag("dt", "Model type"), tag("dd", fit$forest$treetype),
       tag("dt", "Dep. var. name"), tag("dd", depvar),
+      tag("dt", "Genes in network"), tag("dd", list(
+        sprintf("%.2f %%", found_pct),
+        downloadLink("dlMissingGenes", sprintf("(%d missing)", length(model$missing_genes)))
+      )),
       tag("dt", "No. samples"), tag("dd", fit$num.samples),
       tag("dt", "No. features"), tag("dd", fit$num.independent.variables),
       tag("dt", "No. trees"), tag("dd", fit$num.trees),
-      tag("dt", "OOB prediction error"), tag("dd", fit$prediction.error)
+      tag("dt", "OOB prediction error"), tag("dd", sprintf("%.3f", fit$prediction.error))
     ))
   })
 
@@ -349,6 +364,13 @@ shinyServer(function(input, output, session) {
     filename = "enrichment.csv",
     content = function(file) {
       write.csv(as.data.frame(currentEnrichmentTable()), file, row.names=FALSE)
+    }
+  )
+  
+  output$dlMissingGenes <- downloadHandler(
+    filename = "missing_genes.txt",
+    content = function(file) {
+      write(currentModel()$missing_genes, file=file)
     }
   )
   

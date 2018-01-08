@@ -36,7 +36,13 @@ shinyUI(tagList(
             "BioGRID" = "biogrid",
             "HTRIdb" = "htri"
           )),
-          actionButton("submitButton", "Train grand forest", styleclass = "primary")
+          actionButton("submitButton", "Train grand forest", styleclass = "primary"),
+          conditionalPanel("output.hasModel == true",
+            h3("Model summary"),
+            uiOutput("summary"),
+            h3("Parameters"),
+            sliderInput("nfeatures", "Number of top features to show in network and heatmap", min=MIN_NUM_FEATURES, max=MAX_NUM_FEATURES, value=DEFAULT_NUM_FEATURES, step=1, width = "400px")
+          )
         ),
         mainPanel(
           conditionalPanel("output.hasModel == true",
@@ -44,16 +50,6 @@ shinyUI(tagList(
               tabPanel("Analysis",
                 tags$div(class="page-header", h2("Analysis")),
                 fluidRow(
-                  column(width=6,
-                    h3("Model summary"),
-                    wellPanel(
-                      uiOutput("summary")
-                    ),
-                    h3("Parameters"),
-                    wellPanel(
-                      sliderInput("nfeatures", "Number of top features to show in network and heatmap", min=MIN_NUM_FEATURES, max=MAX_NUM_FEATURES, value=DEFAULT_NUM_FEATURES, step=1, width = "400px")
-                    )
-                  ),
                   column(width=6,
                     h3("Feature subnetwork"),
                     wellPanel(
@@ -63,24 +59,20 @@ shinyUI(tagList(
                         column(width=4, checkboxInput("featureGraphGeneSymbols", "Show gene symbols", value=TRUE))
                       )
                     )
-                  )
-                ),
-                fluidRow(
+                  ),
                   column(width=6,
                     h3("Heatmap"),
                     wellPanel(
                       plotOutput("featureHeatmap", height=500),
                       downloadButton("dlFeatureHeatmap", "Download heatmap", class="btn-sm")
                     )
-                  ),
-                  column(width=6,
-                    h3("Feature table"),
-                    wellPanel(
-                      dataTableOutput("featureTable"),
-                      downloadButton("dlFeatureTable", "Download table", class="btn-sm"),
-                      downloadButton("dlFeatureTableFull", "Download full table", class="btn-sm")
-                    )
                   )
+                ),
+                h3("Feature table"),
+                wellPanel(
+                  dataTableOutput("featureTable"),
+                  downloadButton("dlFeatureTable", "Download table", class="btn-sm"),
+                  downloadButton("dlFeatureTableFull", "Download full table", class="btn-sm")
                 ),
                 h3("Gene set enrichment"),
                 wellPanel(
