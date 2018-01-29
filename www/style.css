@@ -60,10 +60,6 @@ body {
   display: none;
 }
 
-#enrichmentTable table {
-  white-space: nowrap;
-}
-
 #loading-content {
   position: fixed;
   background: #000000;
@@ -74,4 +70,8 @@ body {
   height: 100%;
   text-align: center;
   color: #FFFFFF;
+}
+
+#enrichmentTable table {
+  white-space: nowrap;
 }
