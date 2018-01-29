@@ -260,21 +260,17 @@ shinyServer(function(input, output, session) {
       setProgress(value=0.1, detail="Preparing data")
       features <- head(featureTable(), input$nfeatures)
       genes <- as.character(features$gene)
-      print(head(genes))
 
       setProgress(value=0.2, detail="Extracting targets")
       out <- get_gene_targets(genes, input$targetsType)
 
       setProgress(value=0.9, detail="Finishing up")
       currentTargetsTable(out)
-      print(head(out))
     })
   })
 
   output$targetsTable <- renderDataTable({
-    D <- currentTargetsTable()
-    D <- get_gene_target_links(D, isolate(input$targetsType))
-    return(D)
+    get_gene_target_links(currentTargetsTable(), isolate(input$targetsType))
   }, options = list(pageLength=10, scrollX=TRUE), escape=FALSE)
 
   output$predictionsTable <- renderDataTable({
