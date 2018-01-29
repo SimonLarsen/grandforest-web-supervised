@@ -14,12 +14,6 @@ body {
   font-size: 20px;
 }
 
-#shiny-notification-panel {
-  bottom: initial;
-  top: 0;
-  width: 300px;
-}
-
 .progress {
   height: 16px;
   margin-bottom: 15px;
@@ -28,6 +22,24 @@ body {
 .progress .progress-bar {
   font-size: 14px;
   line-height: 16px;
+}
+
+#shiny-notification-panel {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  background-color: rgba(0, 0, 0, 0.9);
+  padding: 0;
+}
+
+.shiny-notification {
+  background-color: transparent;
+  color: #fff;
+  border: 0;
+  opacity: 1;
 }
 
 .shiny-progress-notification .progress {
@@ -44,8 +56,8 @@ body {
   display: block;
 }
 
-.shiny-notification-error {
-  font-weight: bold;
+.shiny-notification-close {
+  display: none;
 }
 
 #enrichmentTable table {

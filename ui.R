@@ -1,8 +1,8 @@
 library(shiny)
 library(shinyjs)
-library(shinythemes)
 library(shinysky)
 library(visNetwork)
+library(shinycssloaders)
 
 source("grandforest-web-common/enrichment.R")
 
@@ -13,7 +13,7 @@ shinyUI(tagList(
   ),
   useShinyjs(),
   div(id="loading-content", h2("Loading..."), div(class="loader", "Loading")),
-  navbarPage("Grand Forest • Supervised", theme=shinytheme("cosmo"), footer=column(width=12, hr(), p("Grand Forest • Supervised workflow • Version 0.1")),
+  navbarPage("Grand Forest • Supervised", footer=column(width=12, hr(), p("Grand Forest • Supervised workflow • Version 0.1")), inverse=TRUE,
     tabPanel("Analysis",
       sidebarLayout(
         sidebarPanel(width = 3,
@@ -63,7 +63,7 @@ shinyUI(tagList(
                   column(width=6,
                     h3("Heatmap"),
                     wellPanel(
-                      plotOutput("featureHeatmap", height=500),
+                      withSpinner(plotOutput("featureHeatmap", height=500)),
                       downloadButton("dlFeatureHeatmap", "Download heatmap", class="btn-sm")
                     )
                   )
@@ -90,7 +90,7 @@ shinyUI(tagList(
                         downloadButton("dlEnrichmentTable", "Download table", class="btn-sm")
                       ),
                       tabPanel("Plot",
-                        plotOutput("enrichmentPlot")
+                        withSpinner(plotOutput("enrichmentPlot"))
                       )
                     )
                   )
@@ -113,11 +113,11 @@ shinyUI(tagList(
                 fluidRow(
                   column(width=6,
                     h4("Classification performance"),
-                    wellPanel(plotOutput("evaluationPerformance"))
+                    wellPanel(withSpinner(plotOutput("evaluationPerformance")))
                   ),
                   column(width=6,
                     h4("Feature stability"),
-                    wellPanel(plotOutput("evaluationStability"))
+                    wellPanel(withSpinner(plotOutput("evaluationStability")))
                   )
                 )
               ),
