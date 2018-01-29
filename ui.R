@@ -5,6 +5,7 @@ library(visNetwork)
 library(shinycssloaders)
 
 source("grandforest-web-common/enrichment.R")
+source("grandforest-web-common/targets.R")
 
 shinyUI(tagList(
   tags$head(
@@ -68,33 +69,40 @@ shinyUI(tagList(
                     )
                   )
                 ),
-                h3("Feature table"),
-                wellPanel(
-                  dataTableOutput("featureTable"),
-                  downloadButton("dlFeatureTable", "Download table", class="btn-sm"),
-                  downloadButton("dlFeatureTableFull", "Download full table", class="btn-sm")
-                ),
-                h3("Gene set enrichment"),
-                wellPanel(
-                  fluidRow(
-                    column(width=4, selectInput("enrichmentType", "Enrichment type", gene_set_enrichment_types())),
-                    column(width=4, numericInput("enrichmentPvalueCutoff", "p-value cutoff", value=0.05, min=0, max=1, step=0.01)),
-                    column(width=4, numericInput("enrichmentQvalueCutoff", "q-value cutoff", value=0.2, min=0, max=1, step=0.01))
+                div(class="body-tabs", tabsetPanel(type="tabs",
+                  tabPanel("Feature table",
+                    dataTableOutput("featureTable"),
+                    downloadButton("dlFeatureTable", "Download table", class="btn-sm"),
+                    downloadButton("dlFeatureTableFull", "Download full table", class="btn-sm")
                   ),
-                  actionButton("enrichmentButton", "Run enrichment analysis", styleclass="primary"),
-                  conditionalPanel("output.hasEnrichmentTable == true",
-                    hr(),
-                    tabsetPanel(
-                      tabPanel("Table",
-                        dataTableOutput("enrichmentTable"),
-                        downloadButton("dlEnrichmentTable", "Download table", class="btn-sm")
-                      ),
-                      tabPanel("Plot",
-                        withSpinner(plotOutput("enrichmentPlot"))
+                  tabPanel("Gene set enrichment",
+                    fluidRow(
+                      column(width=4, selectInput("enrichmentType", "Enrichment type", gene_set_enrichment_types())),
+                      column(width=4, numericInput("enrichmentPvalueCutoff", "p-value cutoff", value=0.05, min=0, max=1, step=0.01)),
+                      column(width=4, numericInput("enrichmentQvalueCutoff", "q-value cutoff", value=0.2, min=0, max=1, step=0.01))
+                    ),
+                    actionButton("enrichmentButton", "Run enrichment analysis", styleclass="primary"),
+                    conditionalPanel("output.hasEnrichmentTable == true",
+                      hr(),
+                      tabsetPanel(
+                        tabPanel("Table",
+                          dataTableOutput("enrichmentTable"),
+                          downloadButton("dlEnrichmentTable", "Download table", class="btn-sm")
+                        ),
+                        tabPanel("Dot plot", withSpinner(plotOutput("enrichmentPlot")))
                       )
                     )
+                  ),
+                  tabPanel("Gene targets",
+                    selectInput("targetsType", "Database", gene_target_sources()),
+                    actionButton("targetsButton", "Get gene targets", styleclass="primary"),
+                    conditionalPanel("output.hasTargetsTable == true",
+                      hr(),
+                      dataTableOutput("targetsTable"),
+                      downloadButton("dlTargetsTable", "Download table", class="btn-sm")
+                    )
                   )
-                )
+                ))
               ),
               tabPanel("Evaluation",
                 tags$div(class="page-header",

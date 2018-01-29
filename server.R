@@ -13,6 +13,7 @@ library(ggplot2)
 
 source("grandforest-web-common/get_network.R")
 source("grandforest-web-common/enrichment.R")
+source("grandforest-web-common/targets.R")
 source("grandforest-web-common/feature_graph.R")
 source("evaluation.R")
 
@@ -21,6 +22,7 @@ shinyServer(function(input, output, session) {
   currentData <- reactiveVal()
   currentModel <- reactiveVal()
   currentEnrichmentTable <- reactiveVal()
+  currentTargetsTable <- reactiveVal()
   currentEvaluation <- reactiveVal()
   currentPredictions <- reactiveVal()
 
@@ -35,6 +37,12 @@ shinyServer(function(input, output, session) {
     return(nrow(D) > 0)
   })
   outputOptions(output, "hasEnrichmentTable", suspendWhenHidden=FALSE)
+
+  output$hasTargetsTable <- reactive({
+    D <- req(currentTargetsTable())
+    return(nrow(D) > 0)
+  })
+  outputOptions(output, "hasTargetsTable", suspendWhenHidden=FALSE)
 
   output$hasPredictions <- reactive({
     req(currentPredictions())
@@ -122,6 +130,8 @@ shinyServer(function(input, output, session) {
         found_genes=found_genes,
         missing_genes=missing_genes
       ))
+      currentEnrichmentTable(NULL)
+      currentTargetsTable(NULL)
       currentEvaluation(NULL)
       currentPredictions(NULL)
     })
@@ -195,11 +205,7 @@ shinyServer(function(input, output, session) {
 
   output$featureTable <- renderDataTable({
     head(featureTable(), n=input$nfeatures)
-  }, options=list(
-    scrollX = TRUE,
-    searching = FALSE,
-    pageLength = 10
-  ))
+  }, options=list(pageLength=10, searching=FALSE, scrollX = TRUE))
 
   featureHeatmapPlot <- reactive({
     depvar <- currentModel()$depvar
@@ -228,36 +234,54 @@ shinyServer(function(input, output, session) {
       D <- currentData()
       universe <- setdiff(colnames(D), depvar)
 
-      setProgress(value=0.1, detail="Computing enrichment")
+      setProgress(value=0.2, detail="Computing enrichment")
       out <- gene_set_enrichment(genes, universe, input$enrichmentType, input$enrichmentPvalueCutoff, input$enrichmentQvalueCutoff)
 
-      setProgress(value=0.1, detail="Finishing up")
+      setProgress(value=0.9, detail="Finishing up")
       currentEnrichmentTable(out)
     })
   })
 
   output$enrichmentTable <- renderDataTable({
     D <- req(as.data.frame(currentEnrichmentTable()))
-    D$ID <- gene_set_enrichment_get_links(D$ID, isolate(input$enrichmentType))
+    D <- gene_set_enrichment_get_links(D, isolate(input$enrichmentType))
     return(D)
-  }, options = list(
-    pageLength = 10,
-    scrollX = TRUE
-  ), escape = FALSE)
+  }, options = list(pageLength=10, scrollX=TRUE), escape=FALSE)
 
   output$enrichmentPlot <- renderPlot({
     D <- req(currentEnrichmentTable())
     DOSE::dotplot(D, showCategory=20)
   })
 
+  observeEvent(input$targetsButton, {
+    req(featureTable())
+
+    withProgress(message="Finding gene targets", {
+      setProgress(value=0.1, detail="Preparing data")
+      features <- head(featureTable(), input$nfeatures)
+      genes <- as.character(features$gene)
+      print(head(genes))
+
+      setProgress(value=0.2, detail="Extracting targets")
+      out <- get_gene_targets(genes, input$targetsType)
+
+      setProgress(value=0.9, detail="Finishing up")
+      currentTargetsTable(out)
+      print(head(out))
+    })
+  })
+
+  output$targetsTable <- renderDataTable({
+    D <- currentTargetsTable()
+    D <- get_gene_target_links(D, isolate(input$targetsType))
+    return(D)
+  }, options = list(pageLength=10, scrollX=TRUE), escape=FALSE)
+
   output$predictionsTable <- renderDataTable({
     req(currentPredictions())
     preds <- currentPredictions()
     data.frame(sample=1:length(preds), prediction=preds)
-  }, options = list(
-    searching = FALSE,
-    pageLength = 10
-  ))
+  }, options = list(searching = FALSE, pageLength = 10))
 
   observeEvent(input$evaluationButton, {
     if(input$cvTrees < MIN_NUM_TREES || input$cvTrees > MAX_NUM_TREES) {
@@ -361,10 +385,13 @@ shinyServer(function(input, output, session) {
   )
 
   output$dlEnrichmentTable <- downloadHandler(
-    filename = "enrichment.csv",
-    content = function(file) {
-      write.csv(as.data.frame(currentEnrichmentTable()), file, row.names=FALSE)
-    }
+    filename = function() { paste0("enrichment.", input$enrichmentType, ".csv") },
+    content = function(file) { write.csv(as.data.frame(currentEnrichmentTable()), file, row.names=FALSE) }
+  )
+
+  output$dlTargetsTable <- downloadHandler(
+    filename = function() { paste0("targets.", input$targetsType, ".csv") },
+    content = function(file) { write.csv(currentTargetsTable(), file, row.names=FALSE) }
   )
 
   output$dlMissingGenes <- downloadHandler(
