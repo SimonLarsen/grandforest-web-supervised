@@ -69,6 +69,7 @@ shinyUI(tagList(
                     )
                   )
                 ),
+                h3("Genes"),
                 div(class="body-tabs", tabsetPanel(type="tabs",
                   tabPanel("Feature table",
                     dataTableOutput("featureTable"),

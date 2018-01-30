@@ -66,7 +66,7 @@ shinyServer(function(input, output, session) {
 
     withProgress(value=0, message="Training grand forest", {
       # Read data file
-      setProgress(value=0, detail="Reading data file")
+      setProgress(value=0.1, detail="Reading data file")
       if(input$useExampleData) {
         D <- readRDS(EXAMPLE_DATA_PATH)
         depvar <- EXAMPLE_DATA_DEPVAR
@@ -82,11 +82,21 @@ shinyServer(function(input, output, session) {
         return()
       }
 
+      # Read graph file
+      setProgress(value=0.2, detail="Preparing network")
+      path <- get_network_file(input$graph)
+      edges <- fread(path, header=FALSE, sep="\t", colClasses=rep("character", 2))
+      colnames(edges) <- c("from","to")
+      currentEdges(edges)
+
+      all_nodes <- unique(c(edges$from, edges$to))
+      found_genes <- intersect(colnames(D), all_nodes)
+      missing_genes <- setdiff(setdiff(colnames(D), depvar), all_nodes)
+
       # Scale and center data
-      setProgress(value=0.1, detail="Normalizing data")
-      depvar_col <- which(colnames(D) == depvar)
+      setProgress(value=0.3, detail="Normalizing data")
       D <- tryCatch({
-        data.table(D[[depvar]], scale(D[,-depvar_col,with=FALSE], center=TRUE, scale=TRUE))
+        data.table(D[[depvar]], scale(D[,found_genes,with=FALSE], center=TRUE, scale=TRUE))
       }, error = function(e) {
         alert("Normalization failed. Not all columns are numeric.")
         return()
@@ -104,15 +114,8 @@ shinyServer(function(input, output, session) {
         D[[depvar]] <- as.numeric(D[[depvar]])
       }
 
-      # Read graph file
-      setProgress(value=0.2, detail="Preparing network")
-      path <- get_network_file(input$graph)
-      edges <- fread(path, header=FALSE, sep="\t", colClasses=rep("character", 2))
-      colnames(edges) <- c("from","to")
-      currentEdges(edges)
-
       # Train grand forest model
-      setProgress(value=0.3, detail="Training model")
+      setProgress(value=0.5, detail="Training model")
       fit <- grandforest(
         data=D, graph_data=edges,
         dependent.variable.name=depvar,
@@ -120,10 +123,6 @@ shinyServer(function(input, output, session) {
         num.trees=input$ntrees,
         importance="impurity"
       )
-
-      all_nodes <- unique(c(edges$from, edges$to))
-      found_genes <- intersect(colnames(D), all_nodes)
-      missing_genes <- setdiff(setdiff(colnames(D), depvar), all_nodes)
 
       setProgress(value=0.9, detail="Finishing up")
       currentData(D)
@@ -178,7 +177,7 @@ shinyServer(function(input, output, session) {
     model <- req(currentModel())
     fit <- model$fit
     depvar <- model$depvar
-    found_pct <- length(model$found_genes) / fit$num.independent.variables * 100
+    found_pct <- length(model$found_genes) / (length(model$found_genes)+length(model$missing_genes)) * 100
     tag("dl", list(class="dl-horizontal",
       tag("dt", "Model type"), tag("dd", fit$forest$treetype),
       tag("dt", "Dep. var. name"), tag("dd", depvar),
