@@ -130,7 +130,7 @@ shinyUI(tagList(
                 )
               ),
               tabPanel("Prediction",
-                tags$div(class="page-header", h2("Prediction")),
+                div(h2("Prediction"), class="page-header"),
                 fluidRow(
                   column(width = 4,
                     wellPanel(

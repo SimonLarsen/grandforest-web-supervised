@@ -262,18 +262,10 @@ shinyServer(function(input, output, session) {
 
   observeEvent(input$targetsButton, {
     req(featureTable())
-
-    withProgress(message="Finding gene targets", {
-      setProgress(value=0.1, detail="Preparing data")
-      features <- head(featureTable(), input$nfeatures)
-      genes <- as.character(features$gene)
-
-      setProgress(value=0.2, detail="Extracting targets")
-      out <- get_gene_targets(genes, input$targetsType)
-
-      setProgress(value=0.9, detail="Finishing up")
-      currentTargetsTable(out)
-    })
+    features <- head(featureTable(), input$nfeatures)
+    genes <- as.character(features$gene)
+    out <- get_gene_targets(genes, input$targetsType)
+    currentTargetsTable(out)
   })
 
   output$targetsTable <- renderDataTable({

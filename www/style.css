@@ -6,8 +6,16 @@ body {
   background-color: #ffffff;
 }
 
+.navbar-inverse .navbar-brand {
+  color: #fff;
+}
+
 .sidebar-top-heading {
   margin-top: 0;
+}
+
+.well > .page-header {
+  margin: 20px 0 20px 0;
 }
 
 #mainTabs > li > a {
@@ -27,7 +35,7 @@ body {
 }
 
 .progress .progress-bar {
-  font-size: 14px;
+  font-size: 12px;
   line-height: 16px;
 }
 
