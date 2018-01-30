@@ -215,7 +215,10 @@ shinyServer(function(input, output, session) {
     depvar <- currentModel()$depvar
     features <- head(featureTable(), n=input$nfeatures)
     D <- currentData()
-    groups <- as.factor(D[[depvar]])
+    groups <- NULL
+    if(currentModel()$type == "classification" || currentModel()$type == "probability") {
+      groups <- as.factor(D[[depvar]])
+    }
     D <- D[,features$gene,with=FALSE]
     colnames(D) <- paste0(features$gene, " (", features$name, ")")
 
