@@ -54,7 +54,7 @@ shinyUI(tagList(
                   column(width=6,
                     h3("Feature subnetwork"),
                     wellPanel(
-                      visNetworkOutput("featureGraph"),
+                      withSpinner(visNetworkOutput("featureGraph")),
                       fluidRow(
                         column(width=4, downloadButton("dlFeatureGraph", "Download network", class="btn-sm")),
                         column(width=4, checkboxInput("featureGraphGeneSymbols", "Show gene symbols", value=TRUE))
@@ -99,8 +99,13 @@ shinyUI(tagList(
                     actionButton("targetsButton", "Get gene targets", styleclass="primary"),
                     conditionalPanel("output.hasTargetsTable == true",
                       hr(),
-                      dataTableOutput("targetsTable"),
-                      downloadButton("dlTargetsTable", "Download table", class="btn-sm")
+                      tabsetPanel(type="tabs",
+                        tabPanel("Table",
+                          dataTableOutput("targetsTable"),
+                          downloadButton("dlTargetsTable", "Download table", class="btn-sm")
+                        ),
+                        tabPanel("Network", withSpinner(visNetworkOutput("targetsNetwork")))
+                      )
                     )
                   )
                 ))

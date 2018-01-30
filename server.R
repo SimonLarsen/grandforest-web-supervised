@@ -271,6 +271,30 @@ shinyServer(function(input, output, session) {
     get_gene_target_links(currentTargetsTable(), isolate(input$targetsType))
   }, options = list(pageLength=10, scrollX=TRUE), escape=FALSE)
 
+  output$targetsNetwork <- renderVisNetwork({
+    targets <- currentTargetsTable()
+    gene_col <- which(colnames(targets) == "gene")
+    edges <- targets[,c(1,gene_col)]
+    colnames(edges) <- c("from","to")
+    
+    from_nodes <- unique(edges$from)
+    to_nodes <- unique(edges$to)
+    
+    nodes <- data.frame(
+      id = c(from_nodes, to_nodes),
+      label = c(from_nodes, to_nodes),
+      color.background = c(rep("lightblue", length(from_nodes)), rep("red", length(to_nodes))),
+      stringsAsFactors = FALSE
+    )
+    
+    validate(need(nrow(nodes) <= 400, "Gene target network not supported for > 400 nodes."))
+    
+    visNetwork(nodes, edges) %>%
+      visNodes(shape = "ellipse") %>%
+      visEdges(smooth = FALSE) %>%
+      visIgraphLayout()
+  })
+  
   output$predictionsTable <- renderDataTable({
     req(currentPredictions())
     preds <- currentPredictions()
