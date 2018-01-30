@@ -250,7 +250,7 @@ shinyServer(function(input, output, session) {
 
   output$enrichmentTable <- renderDataTable({
     D <- req(as.data.frame(currentEnrichmentTable()))
-    D <- gene_set_enrichment_get_links(D, isolate(input$enrichmentType))
+    D <- get_gene_set_enrichment_links(D, isolate(input$enrichmentType))
     return(D)
   }, options = list(pageLength=10, scrollX=TRUE), escape=FALSE)
 
