@@ -287,7 +287,10 @@ shinyServer(function(input, output, session) {
       stringsAsFactors = FALSE
     )
     
-    validate(need(nrow(nodes) <= 400, "Gene target network not supported for > 400 nodes."))
+    validate(need(
+      nrow(nodes) <= MAX_TARGET_NETWORK_NODES,
+      sprintf("Gene target network not supported for > %d nodes.", MAX_TARGET_NETWORK_NODES)
+    ))
     
     visNetwork(nodes, edges) %>%
       visNodes(shape = "ellipse") %>%
