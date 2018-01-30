@@ -153,7 +153,17 @@ shinyUI(tagList(
         )
       )
     ),
-    tabPanel("User guide"),
-    tabPanel("Cite")
+    tabPanel("User guide",
+      wellPanel(
+        div(h1("User guide"), class="page-header"),
+        includeMarkdown("guide.md")
+      )
+    ),
+    tabPanel("Cite",
+      wellPanel(
+        div(h1("Cite"), class="page-header"),
+        includeMarkdown("cite.md")
+      )
+    )
   )
 ))
