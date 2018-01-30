@@ -89,13 +89,17 @@ shinyServer(function(input, output, session) {
         data.table(D[[depvar]], scale(D[,-depvar_col,with=FALSE], center=TRUE, scale=TRUE))
       }, error = function(e) {
         alert("Normalization failed. Not all columns are numeric.")
-        req(FALSE)
+        return()
       })
       colnames(D)[1] <- depvar
 
       # convert dependent variable to correct type
       if(modelType == "classification" || modelType == "probability") {
         D[[depvar]] <- as.factor(D[[depvar]])
+        if(length(levels(D[[depvar]])) > MAX_NUM_CLASSES) {
+          alert(sprintf("Dependent variable contains too many different classes. Only up to %d allowed.", MAX_NUM_CLASSES))
+          return()
+        }
       } else {
         D[[depvar]] <- as.numeric(D[[depvar]])
       }
