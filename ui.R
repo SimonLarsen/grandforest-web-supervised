@@ -15,7 +15,7 @@ shinyUI(tagList(
   useShinyjs(),
   div(id="loading-content", h2("Loading..."), div(class="loader", "Loading")),
   navbarPage("Grand Forest • Supervised", footer=column(width=12, hr(), p("Grand Forest • Supervised workflow • Version 0.1")), inverse=TRUE,
-    tabPanel("Analysis",
+    tabPanel(HTML("Analysis</a></li><li><a href=\"https://grandforest.compbio.sdu.dk/guide/supervised\" target=_blank>User guide</a></li><li><a href=\"https://grandforest.compbio.sdu.dk/#cite\" target=_blank>Cite"),
       sidebarLayout(
         sidebarPanel(width = 3,
           tags$h3("Train model", class="sidebar-top-heading"),
@@ -160,18 +160,6 @@ shinyUI(tagList(
             )
           )
         )
-      )
-    ),
-    tabPanel("User guide",
-      wellPanel(
-        div(h1("User guide"), class="page-header"),
-        includeMarkdown("guide.md")
-      )
-    ),
-    tabPanel("Cite",
-      wellPanel(
-        div(h1("Cite"), class="page-header"),
-        includeMarkdown("cite.md")
       )
     )
   )
