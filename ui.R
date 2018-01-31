@@ -104,7 +104,10 @@ shinyUI(tagList(
                           dataTableOutput("targetsTable"),
                           downloadButton("dlTargetsTable", "Download table", class="btn-sm")
                         ),
-                        tabPanel("Network", withSpinner(visNetworkOutput("targetsNetwork")))
+                        tabPanel("Network",
+                          withSpinner(visNetworkOutput("targetsNetwork")),
+                          checkboxInput("targetsNetworkSymbols", "Show gene symbols", value=TRUE)
+                        )
                       )
                     )
                   )

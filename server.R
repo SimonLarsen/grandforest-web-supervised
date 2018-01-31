@@ -15,6 +15,7 @@ source("grandforest-web-common/get_network.R")
 source("grandforest-web-common/enrichment.R")
 source("grandforest-web-common/targets.R")
 source("grandforest-web-common/feature_graph.R")
+source("grandforest-web-common/mapping.R")
 source("evaluation.R")
 
 shinyServer(function(input, output, session) {
@@ -167,7 +168,7 @@ shinyServer(function(input, output, session) {
     imp <- importance(currentModel()$fit)
 
     genes <- names(imp)
-    symbols <- mapIds(org.Hs.eg.db, genes, "SYMBOL", "ENTREZID")
+    symbols <- map_ids_fallback(genes, "SYMBOL", "ENTREZID")
 
     D <- data.table(gene=genes, name=symbols, importance=imp)
     D[order(D$importance, decreasing=TRUE),]
@@ -272,30 +273,7 @@ shinyServer(function(input, output, session) {
   }, options = list(pageLength=10, scrollX=TRUE), escape=FALSE)
 
   output$targetsNetwork <- renderVisNetwork({
-    targets <- currentTargetsTable()
-    gene_col <- which(colnames(targets) == "gene")
-    edges <- targets[,c(1,gene_col)]
-    colnames(edges) <- c("from","to")
-    
-    from_nodes <- unique(edges$from)
-    to_nodes <- unique(edges$to)
-    
-    nodes <- data.frame(
-      id = c(from_nodes, to_nodes),
-      label = c(from_nodes, to_nodes),
-      color.background = c(rep("lightblue", length(from_nodes)), rep("red", length(to_nodes))),
-      stringsAsFactors = FALSE
-    )
-    
-    validate(need(
-      nrow(nodes) <= MAX_TARGET_NETWORK_NODES,
-      sprintf("Gene target network not supported for > %d nodes.", MAX_TARGET_NETWORK_NODES)
-    ))
-    
-    visNetwork(nodes, edges) %>%
-      visNodes(shape = "ellipse") %>%
-      visEdges(smooth = FALSE) %>%
-      visIgraphLayout()
+    get_targets_network(currentTargetsTable(), input$targetsNetworkSymbols)
   })
   
   output$predictionsTable <- renderDataTable({
@@ -366,8 +344,8 @@ shinyServer(function(input, output, session) {
       edges <- subset(edges, from %in% features$gene & to %in% features$gene)
       D <- data.frame(from=edges$from, type=".", to=edges$to)
       if(input$featureGraphGeneSymbols) {
-        D$from <- mapIds(org.Hs.eg.db, as.character(D$from), "SYMBOL", "ENTREZID")
-        D$to <- mapIds(org.Hs.eg.db, as.character(D$to), "SYMBOL", "ENTREZID")
+        D$from <- map_ids_fallback(as.character(D$from), "SYMBOL", "ENTREZID")
+        D$to <- map_ids_fallback(as.character(D$to), "SYMBOL", "ENTREZID")
       }
       write.table(D, file, row.names=FALSE, col.names=FALSE, sep="\t", quote=FALSE)
     }
