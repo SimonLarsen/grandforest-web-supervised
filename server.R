@@ -85,9 +85,7 @@ shinyServer(function(input, output, session) {
 
       # Read graph file
       setProgress(value=0.2, detail="Preparing network")
-      path <- get_network_file(input$graph)
-      edges <- fread(path, header=FALSE, sep="\t", colClasses=rep("character", 2))
-      colnames(edges) <- c("from","to")
+      edges <- readRDS(get_network_file(input$graph))
       currentEdges(edges)
 
       all_nodes <- unique(c(edges$from, edges$to))
