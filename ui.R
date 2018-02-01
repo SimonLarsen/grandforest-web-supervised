@@ -42,7 +42,7 @@ shinyUI(tagList(
             h3("Model summary"),
             uiOutput("summary"),
             h3("Parameters"),
-            sliderInput("nfeatures", "Number of top features to show in network and heatmap", min=MIN_NUM_FEATURES, max=MAX_NUM_FEATURES, value=DEFAULT_NUM_FEATURES, step=1, width = "400px")
+            sliderInput("nfeatures", "Number of top features", min=MIN_NUM_FEATURES, max=MAX_NUM_FEATURES, value=DEFAULT_NUM_FEATURES, step=1, width = "400px")
           )
         ),
         mainPanel(
