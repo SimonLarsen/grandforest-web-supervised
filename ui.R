@@ -30,7 +30,7 @@ shinyUI(tagList(
             textInput("depvar", "Dependent variable name")
           ),
           numericInput("ntrees", "Number of decision trees", DEFAULT_NUM_TREES, min = MIN_NUM_TREES, max = MAX_NUM_TREES),
-          selectInput("graph", "Genetic interaction network", list(
+          selectInput("graph", "Network", list(
             "IID, Human, Experimental only" = "iidexp",
             "IID, Human" = "iidall",
             "RegNetwork" = "regnetwork",
