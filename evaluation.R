@@ -1,5 +1,6 @@
 library(caret)
 library(mccr)
+library(reshape2)
 
 evaluation_stability <- function(fits, sizes=c(1,5,10,20,40)) {
   features <- lapply(fits, function(fit) {
@@ -21,30 +22,52 @@ evaluation_stability <- function(fits, sizes=c(1,5,10,20,40)) {
 }
 
 evaluation_classification <- function(preds, labels) {
-  list(
-    f.scores = confusionMatrix(preds, labels)$byClass["F1"],
-    mat.scores = mccr(as.numeric(preds)-1, as.numeric(labels)-1)
-  )
+  if(length(levels(labels)) == 2) {
+    data.frame(
+      `F1 score` = confusionMatrix(preds, labels)$byClass["F1"],
+      `Matthews correlation coefficient` = mccr(as.numeric(preds)-1, as.numeric(labels)-1),
+      check.names = FALSE
+    )
+  } else {
+    cm <- confusionMatrix(preds, labels)$byClass
+    mprec <- mean(cm[,"Precision"])
+    mrec <- mean(cm[,"Recall"])
+    
+    data.frame(
+      `F1 score macro avg.` = mean(cm[,"F1"]),
+      `F1 score micro avg.` = 2 * (mprec * mrec) / (mprec + mrec),
+      check.names = FALSE
+    )
+  }
 }
 
 evaluation_regression <- function(preds, labels) {
+  ym <- mean(labels)
+  SSres <- sum((labels - preds)^2)
+  SStot <- sum((labels - ym)^2)
   
+  R2 <- 1 - SSres/SStot
+  RMSE <- sqrt(mean((preds - labels)^2))
+  data.frame(
+    `R squared` = R2,
+    `Root-mean-squared error` = RMSE,
+    check.names = FALSE
+  )
 }
 
 evaluation_probability <- function(preds, labels) {
-  
+  preds_f <- colnames(preds)[apply(preds, 1, which.max)]
+  evaluation_classification(preds_f, labels)
 }
 
 evaluation_cv <- function(D, depvar, modelType, edges, ntrees, cvFolds, cvRepetitions) {
   withProgress(value=0, max=cvFolds*cvRepetitions, message="Performing evaluation", {
-    f.scores <- list()
-    mat.scores <- list()
-    stability <- list()
+    scores <- data.frame()
+    stability <- data.frame()
     
     for(rep in 1:cvRepetitions) {
       fits <- c()
-      rep.f.scores <- c()
-      rep.mat.scores <- c()
+      rep.scores <- data.frame()
       folds <- createFolds(D[[depvar]], k=cvFolds, returnTrain=TRUE, list=TRUE)
       
       for(i in 1:cvFolds) {
@@ -53,31 +76,30 @@ evaluation_cv <- function(D, depvar, modelType, edges, ntrees, cvFolds, cvRepeti
         preds <- predict(fits[[i]], data=D[-folds[[i]],])$predictions
         labels <- D[-folds[[i]],][[depvar]]
         
-        eval <- evaluation_classification(preds, labels)
+        if(modelType == "classification") {
+          eval <- evaluation_classification(preds, labels)
+        } else if(modelType == "regression") {
+          eval <- evaluation_regression(preds, labels)
+        } else if(modelType == "probability") {
+          eval <- evaluation_probability(preds, labels)
+        }
         
-        rep.f.scores[[i]] <- eval$f.scores
-        rep.mat.scores[[i]] <- eval$mat.scores
+        rep.scores <- rbind(rep.scores, eval)
       }
       
-      f.scores[[rep]] <- rep.f.scores
-      mat.scores[[rep]] <- rep.mat.scores
+      rep.scores$fold <- 1:cvFolds
+      rep.scores$repetition <- rep
+      scores <- rbind(scores, rep.scores)
       
       rep.stability <- evaluation_stability(fits)
       rep.stability$repetition <- rep
       
-      stability[[rep]] <- rep.stability
+      stability <- rbind(stability, rep.stability)
     }
   })
   
-  f.scores <- do.call(rbind, lapply(1:length(f.scores), function(i) {
-    data.frame(fold=1:length(f.scores[[i]]), value=f.scores[[i]], repetition=i, measure="F1-score")
-  }))
-  mat.scores <- do.call(rbind, lapply(1:length(mat.scores), function(i) {
-    data.frame(fold=1:length(mat.scores[[i]]), value=mat.scores[[i]], repetition=i, measure="Matthew's correlation coefficient")
-  }))
-  
-  return(list(
-    performance = rbind(f.scores, mat.scores),
-    stability = do.call(rbind, stability)
-  ))
+  list(
+    performance = melt(scores, id.vars=c("repetition","fold"), variable.name="measure", value.name="value"),
+    stability = stability
+  )
 }

@@ -275,7 +275,7 @@ shinyServer(function(input, output, session) {
   output$targetsNetwork <- renderVisNetwork({
     get_targets_network(currentTargetsTable(), input$targetsNetworkSymbols)
   })
-  
+
   output$predictionsTable <- renderDataTable({
     req(currentPredictions())
     preds <- currentPredictions()
@@ -299,14 +299,21 @@ shinyServer(function(input, output, session) {
   output$evaluationPerformance <- renderPlot({
     req(currentEvaluation())
     D <- currentEvaluation()$performance
-    dummy <- data.frame(x = rep(1,4), y = c(0,1,-1,1), repetition=1, measure = c(rep("F1-score", 2), rep("Matthew's correlation coefficient", 2)))
+    dummy <- subset(rbind(
+      data.frame(x=1, repetition=1, y=c(0,1),  measure="F1 score"),
+      data.frame(x=1, repetition=1, y=c(0,1),  measure="F1 score micro avg."),
+      data.frame(x=1, repetition=1, y=c(0,1),  measure="F1 score macro avg."),
+      data.frame(x=1, repetition=1, y=c(-1,1), measure="Matthews correlation coefficient"),
+      data.frame(x=1, repetition=1, y=c(0,1),  measure="R squared"),
+      data.frame(x=1, repetition=1, y=0,       measure="Root-mean-squared error")
+    ), measure %in% levels(D$measure))
 
     ggplot(aes(x=fold, y=value, color=as.factor(repetition)), data=D) +
       geom_line() +
       geom_point() +
       geom_blank(aes(x=x, y=y), data=dummy) +
       scale_x_continuous(breaks=1:max(D$fold)) +
-      facet_wrap(~measure, ncol=1) +
+      facet_wrap(~measure, ncol=1, scales="free") +
       theme_minimal() +
       theme(
         text = element_text(size=18),
