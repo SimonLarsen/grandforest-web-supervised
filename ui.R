@@ -129,7 +129,7 @@ shinyUI(tagList(
                 h3("Results"),
                 fluidRow(
                   column(width=6,
-                    h4("Classification performance"),
+                    h4("Predictive performance"),
                     wellPanel(withSpinner(plotOutput("evaluationPerformance")))
                   ),
                   column(width=6,
