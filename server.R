@@ -16,6 +16,7 @@ source("grandforest-web-common/enrichment.R")
 source("grandforest-web-common/targets.R")
 source("grandforest-web-common/feature_graph.R")
 source("grandforest-web-common/mapping.R")
+source("grandforest-web-common/make_links.R")
 source("evaluation.R")
 
 shinyServer(function(input, output, session) {
@@ -206,8 +207,10 @@ shinyServer(function(input, output, session) {
   })
 
   output$featureTable <- renderDataTable({
-    head(featureTable(), n=input$nfeatures)
-  }, options=list(pageLength=10, searching=FALSE, scrollX = TRUE))
+    D <- head(featureTable(), n=input$nfeatures)
+    D$gene <- make_links(D$gene, "ncbi_gene")
+    return(D)
+  }, options=list(pageLength=10, searching=FALSE, scrollX = TRUE), escape=FALSE)
 
   featureHeatmapPlot <- reactive({
     depvar <- currentModel()$depvar
@@ -271,7 +274,7 @@ shinyServer(function(input, output, session) {
   }, options = list(pageLength=10, scrollX=TRUE), escape=FALSE)
 
   output$targetsNetwork <- renderVisNetwork({
-    get_targets_network(currentTargetsTable(), input$targetsNetworkSymbols)
+    get_targets_network(currentTargetsTable(), isolate(input$targetsType), input$targetsNetworkSymbols)
   })
 
   output$predictionsTable <- renderDataTable({
