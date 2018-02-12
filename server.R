@@ -270,11 +270,11 @@ shinyServer(function(input, output, session) {
   })
 
   output$targetsTable <- renderDataTable({
-    get_gene_target_links(currentTargetsTable(), isolate(input$targetsType))
+    get_gene_targets_table(currentTargetsTable(), isolate(input$targetsType))
   }, options = list(pageLength=10, scrollX=TRUE), escape=FALSE)
 
   output$targetsNetwork <- renderVisNetwork({
-    get_targets_network(currentTargetsTable(), isolate(input$targetsType), input$targetsNetworkSymbols)
+    get_gene_targets_network(currentTargetsTable(), isolate(input$targetsType), input$targetsNetworkSymbols)
   })
 
   output$predictionsTable <- renderDataTable({

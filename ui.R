@@ -101,7 +101,7 @@ shinyUI(tagList(
                       hr(),
                       tabsetPanel(type="tabs",
                         tabPanel("Table",
-                          dataTableOutput("targetsTable"),
+                          withSpinner(dataTableOutput("targetsTable")),
                           downloadButton("dlTargetsTable", "Download table", class="btn-sm")
                         ),
                         tabPanel("Network",
