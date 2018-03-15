@@ -21,7 +21,7 @@ shinyUI(tagList(
           tags$h3("Train model", class="sidebar-top-heading"),
           checkboxInput("useExampleData", "Use example data"),
           conditionalPanel("input.useExampleData == false",
-            fileInput("file", "Expression table (.csv file)"),
+            fileInput("file", "Expression data"),
             selectInput("modelType", "Model type", list(
               "Classification" = "classification",
               "Regression" = "regression",
