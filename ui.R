@@ -14,7 +14,7 @@ shinyUI(tagList(
   ),
   useShinyjs(),
   div(id="loading-content", h2("Loading..."), div(class="loader", "Loading")),
-  navbarPage("Grand Forest • Supervised", footer=column(width=12, hr(), p("Grand Forest • Supervised workflow • Version 0.1")), inverse=TRUE,
+  navbarPage("Grand Forest • Supervised", footer=column(width=12, hr(), p(paste0("Grand Forest • Supervised workflow • Version ", APP_VERSION))), inverse=TRUE,
     tabPanel(HTML("Analysis</a></li><li><a href=\"https://grandforest.compbio.sdu.dk/guide/supervised\" target=_blank>User guide</a></li><li><a href=\"https://grandforest.compbio.sdu.dk/#cite\" target=_blank>Cite"),
       sidebarLayout(
         sidebarPanel(width = 3,
