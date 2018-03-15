@@ -1,7 +1,3 @@
-body {
-  background-color: #f5f5f5;
-}
-
 .well {
   background-color: #ffffff;
 }
@@ -31,10 +27,6 @@ body {
 
 .well > .page-header {
   margin: 20px 0 20px 0;
-}
-
-#mainTabs > li > a {
-  font-size: 20px;
 }
 
 .body-tabs .tab-content {
@@ -106,14 +98,14 @@ body {
   font-size: 20px;
 }
 
-#mainTabs > li > a {
-  background-color: #fff;
-}
-
-#mainTabs > li.active > a {
-  background-color: #337ab7;
-}
-
 #enrichmentTable table {
   white-space: nowrap;
+}
+
+#splitTree > hr {
+  display: none;
+}
+
+#splitTree > select {
+  display: none !important;
 }
