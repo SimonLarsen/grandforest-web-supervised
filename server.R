@@ -11,6 +11,7 @@ library(circlize)
 library(org.Hs.eg.db)
 library(ggplot2)
 
+source("grandforest-web-common/read_data.R")
 source("grandforest-web-common/get_network.R")
 source("grandforest-web-common/enrichment.R")
 source("grandforest-web-common/targets.R")
@@ -74,7 +75,11 @@ shinyServer(function(input, output, session) {
         depvar <- EXAMPLE_DATA_DEPVAR
         modelType <- EXAMPLE_DATA_MODELTYPE
       } else {
-        D <- fread(input$file$datapath, header=TRUE, sep=",")
+        D <- tryCatch(
+          read_expression_file(input$file$datapath),
+          error = function(e) { alert(e$message); return(NULL) }
+        )
+        if(is.null(D)) return()
         depvar <- input$depvar
         modelType <- input$modelType
       }
@@ -151,10 +156,14 @@ shinyServer(function(input, output, session) {
       req(input$predictFile)
       req(currentModel())
 
-      D <- fread(input$predictFile$datapath, header=TRUE, sep=",")
-      fit <- currentModel()$fit
-
+      D <- tryCatch(
+        read_expression_file(input$predictFile$datapath),
+        error = function(e) { alert(e$message); return(NULL) }
+      )
+      if(is.null(D)) return()
+      
       setProgress(value=0.4, detail="Computing predictions")
+      fit <- currentModel()$fit
       preds <- predict(fit, data=D)
 
       setProgress(value=0.9, detail="Preparing output")

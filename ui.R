@@ -21,7 +21,7 @@ shinyUI(tagList(
           tags$h3("Train model", class="sidebar-top-heading"),
           checkboxInput("useExampleData", "Use example data"),
           conditionalPanel("input.useExampleData == false",
-            fileInput("file", "Expression table (.csv file)", accept="text/csv"),
+            fileInput("file", "Expression table (.csv file)"),
             selectInput("modelType", "Model type", list(
               "Classification" = "classification",
               "Regression" = "regression",
@@ -143,7 +143,7 @@ shinyUI(tagList(
                 fluidRow(
                   column(width = 4,
                     wellPanel(
-                      fileInput("predictFile", "Prediction data (.csv file)", accept="text/csv"),
+                      fileInput("predictFile", "Prediction data"),
                       actionButton("predictButton", "Predict", styleclass="primary")
                     )
                   ),
