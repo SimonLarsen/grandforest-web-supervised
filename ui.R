@@ -7,10 +7,15 @@ library(shinycssloaders)
 source("grandforest-web-common/enrichment.R")
 source("grandforest-web-common/targets.R")
 
+tooltip_label <- function(text, tooltip) {
+  HTML(sprintf('<span data-toggle="tooltip" data-placement="top" title="%s">%s <i class="fa fa-question-circle"></i></span>', tooltip, text))
+}
+
 shinyUI(tagList(
   tags$head(
     tags$link(rel="stylesheet", type="text/css", href="style.css"),
-    tags$link(rel="stylesheet", type="text/css", href="loader.css")
+    tags$link(rel="stylesheet", type="text/css", href="loader.css"),
+    tags$script(type="text/javascript", '/* load tooltips */ $(function () { $(\'[data-toggle="tooltip"]\').tooltip() })')
   ),
   useShinyjs(),
   div(id="loading-content", h2("Loading..."), div(class="loader", "Loading")),
@@ -21,15 +26,15 @@ shinyUI(tagList(
           tags$h3("Train model", class="sidebar-top-heading"),
           checkboxInput("useExampleData", "Use example data"),
           conditionalPanel("input.useExampleData == false",
-            fileInput("file", "Expression data"),
+            fileInput("file", tooltip_label("Expression data", "See `User guide` for a description of supported file formats.")),
             selectInput("modelType", "Model type", list(
               "Classification" = "classification",
               "Regression" = "regression",
               "Probability" = "probability"
             )),
-            textInput("depvar", "Dependent variable name")
+            textInput("depvar", tooltip_label("Dependent variable name", "Name of column containing dependent variable. Must match exactly, including capitalization."))
           ),
-          numericInput("ntrees", "Number of decision trees", DEFAULT_NUM_TREES, min = MIN_NUM_TREES, max = MAX_NUM_TREES),
+          numericInput("ntrees", tooltip_label("Number of decision trees", "How many decision trees to train. Larger number produces better results but takes longer to compute."), DEFAULT_NUM_TREES, min = MIN_NUM_TREES, max = MAX_NUM_TREES),
           selectInput("graph", "Network", list(
             "IID, Human, Experimental only" = "iidexp",
             "IID, Human" = "iidall",
@@ -42,7 +47,7 @@ shinyUI(tagList(
             h3("Model summary"),
             uiOutput("summary"),
             h3("Parameters"),
-            sliderInput("nfeatures", "Number of top features", min=MIN_NUM_FEATURES, max=MAX_NUM_FEATURES, value=DEFAULT_NUM_FEATURES, step=1, width = "400px")
+            sliderInput("nfeatures", tooltip_label("Module size", "Number of features to extract, ranked by importance."), min=MIN_NUM_FEATURES, max=MAX_NUM_FEATURES, value=DEFAULT_NUM_FEATURES, step=1, width = "400px")
           )
         ),
         mainPanel(
@@ -94,7 +99,7 @@ shinyUI(tagList(
                       )
                     )
                   ),
-                  tabPanel("Gene targets",
+                  tabPanel("Drug/miRNA targets",
                     selectInput("targetsType", "Database", gene_target_sources()),
                     actionButton("targetsButton", "Get gene targets", styleclass="primary"),
                     conditionalPanel("output.hasTargetsTable == true",
