@@ -101,7 +101,9 @@ shinyServer(function(input, output, session) {
       # Scale and center data
       setProgress(value=0.3, detail="Normalizing data")
       D <- tryCatch({
-        data.table(D[[depvar]], scale(D[,found_genes,with=FALSE], center=TRUE, scale=TRUE))
+        Ds <- scale(D[,found_genes,with=FALSE], center=TRUE, scale=TRUE)
+        Ds[is.na(Ds)] <- 0
+        data.table(D[[depvar]], Ds)
       }, error = function(e) {
         alert("Normalization failed. Not all columns are numeric.")
         return()
