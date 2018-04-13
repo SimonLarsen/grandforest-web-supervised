@@ -217,7 +217,6 @@ shinyServer(function(input, output, session) {
   }, options=list(pageLength=10, searching=FALSE, scrollX = TRUE), escape=FALSE)
 
   featureHeatmapPlot <- reactive({
-    library(ComplexHeatmap)
     depvar <- currentModel()$depvar
     features <- head(featureTable(), n=input$nfeatures)
     D <- currentData()
@@ -229,7 +228,7 @@ shinyServer(function(input, output, session) {
     colnames(D) <- paste0(features$gene, " (", features$name, ")")
 
     col.ramp <- circlize::colorRamp2(c(-2, 0, 2), c("magenta", "black", "green"))
-    Heatmap(D, name="expression", split=groups, col=col.ramp)
+    ComplexHeatmap::Heatmap(D, name="expression", split=groups, col=col.ramp)
   })
 
   output$featureHeatmap <- renderPlot({
