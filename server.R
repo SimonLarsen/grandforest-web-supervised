@@ -1,15 +1,8 @@
 library(shiny)
 library(shinyjs)
-library(shinysky)
-library(visNetwork)
 library(data.table)
 library(magrittr)
 library(grandforest)
-library(igraph)
-library(ComplexHeatmap)
-library(circlize)
-library(org.Hs.eg.db)
-library(ggplot2)
 
 source("grandforest-web-common/read_data.R")
 source("grandforest-web-common/get_network.R")
@@ -224,6 +217,7 @@ shinyServer(function(input, output, session) {
   }, options=list(pageLength=10, searching=FALSE, scrollX = TRUE), escape=FALSE)
 
   featureHeatmapPlot <- reactive({
+    library(ComplexHeatmap)
     depvar <- currentModel()$depvar
     features <- head(featureTable(), n=input$nfeatures)
     D <- currentData()
@@ -234,7 +228,7 @@ shinyServer(function(input, output, session) {
     D <- D[,features$gene,with=FALSE]
     colnames(D) <- paste0(features$gene, " (", features$name, ")")
 
-    col.ramp <- colorRamp2(c(-2, 0, 2), c("magenta", "black", "green"))
+    col.ramp <- circlize::colorRamp2(c(-2, 0, 2), c("magenta", "black", "green"))
     Heatmap(D, name="expression", split=groups, col=col.ramp)
   })
 
@@ -320,6 +314,7 @@ shinyServer(function(input, output, session) {
       data.frame(x=1, repetition=1, y=0,       measure="Root-mean-squared error")
     ), measure %in% levels(D$measure))
 
+    library(ggplot2)
     ggplot(aes(x=fold, y=value, color=as.factor(repetition)), data=D) +
       geom_line() +
       geom_point() +
@@ -337,6 +332,7 @@ shinyServer(function(input, output, session) {
   })
 
   output$evaluationStability <- renderPlot({
+    library(ggplot2)
     req(currentEvaluation())
     D <- currentEvaluation()$stability
 

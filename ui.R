@@ -1,6 +1,5 @@
 library(shiny)
 library(shinyjs)
-library(shinysky)
 library(visNetwork)
 library(shinycssloaders)
 
@@ -42,7 +41,7 @@ shinyUI(tagList(
             "BioGRID" = "biogrid",
             "HTRIdb" = "htri"
           )),
-          actionButton("submitButton", "Train grand forest", styleclass = "primary"),
+          actionButton("submitButton", "Train grand forest", class = "btn-primary"),
           conditionalPanel("output.hasModel == true",
             h3("Model summary"),
             uiOutput("summary"),
@@ -87,7 +86,7 @@ shinyUI(tagList(
                       column(width=4, numericInput("enrichmentPvalueCutoff", "p-value cutoff", value=0.05, min=0, max=1, step=0.01)),
                       column(width=4, numericInput("enrichmentQvalueCutoff", "q-value cutoff", value=0.2, min=0, max=1, step=0.01))
                     ),
-                    actionButton("enrichmentButton", "Run enrichment analysis", styleclass="primary"),
+                    actionButton("enrichmentButton", "Run enrichment analysis", class="btn-primary"),
                     conditionalPanel("output.hasEnrichmentTable == true",
                       hr(),
                       tabsetPanel(
@@ -101,7 +100,7 @@ shinyUI(tagList(
                   ),
                   tabPanel("Drug/miRNA targets",
                     selectInput("targetsType", "Database", gene_target_sources()),
-                    actionButton("targetsButton", "Get gene targets", styleclass="primary"),
+                    actionButton("targetsButton", "Get gene targets", class="btn-primary"),
                     conditionalPanel("output.hasTargetsTable == true",
                       hr(),
                       tabsetPanel(type="tabs",
@@ -129,7 +128,7 @@ shinyUI(tagList(
                     column(width=4, numericInput("cvRepetitions", "Number of repetitions", min=1, max=5, value=1)),
                     column(width=4, numericInput("cvTrees", "Number of decision trees", min=MIN_NUM_TREES, max=MAX_NUM_TREES, value=DEFAULT_NUM_TREES))
                   ),
-                  actionButton("evaluationButton", "Run evaluation", styleclass = "primary")
+                  actionButton("evaluationButton", "Run evaluation", class="btn-primary")
                 ),
                 h3("Results"),
                 fluidRow(
@@ -149,7 +148,7 @@ shinyUI(tagList(
                   column(width = 4,
                     wellPanel(
                       fileInput("predictFile", "Prediction data"),
-                      actionButton("predictButton", "Predict", styleclass="primary")
+                      actionButton("predictButton", "Predict", class="btn-primary")
                     )
                   ),
                   column(width = 8,
