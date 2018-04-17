@@ -57,6 +57,10 @@ evaluation_probability <- function(preds, labels) {
 }
 
 evaluation_cv <- function(D, depvar, modelType, edges, ntrees, cvFolds, cvRepetitions) {
+  if(modelType == "survival") {
+    alert("Model evaluation not supported for survival data.")
+    return()
+  }
   withProgress(value=0, max=cvFolds*cvRepetitions, message="Performing evaluation", {
     scores <- data.frame()
     stability <- data.frame()

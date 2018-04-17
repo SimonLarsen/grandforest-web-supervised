@@ -28,10 +28,14 @@ shinyUI(tagList(
             fileInput("file", tooltip_label("Expression data", "See `User guide` for a description of supported file formats.")),
             selectInput("modelType", "Model type", list(
               "Classification" = "classification",
+              "Survival" = "survival",
               "Regression" = "regression",
               "Probability" = "probability"
             )),
-            textInput("depvar", tooltip_label("Dependent variable name", "Name of column containing dependent variable. Must match exactly, including capitalization."))
+            textInput("depvar", tooltip_label("Dependent variable name", "Name of column containing dependent variable. Must match exactly, including capitalization.")),
+            conditionalPanel("input.modelType == 'survival'",
+              textInput("statusvar", tooltip_label("Status variable name", "Name of column containing survival status variable. 0 = alive, 1 = death."))
+            )
           ),
           numericInput("ntrees", tooltip_label("Number of decision trees", "How many decision trees to train. Larger number produces better results but takes longer to compute."), DEFAULT_NUM_TREES, min = MIN_NUM_TREES, max = MAX_NUM_TREES),
           selectInput("graph", "Network", list(
@@ -51,7 +55,7 @@ shinyUI(tagList(
         ),
         mainPanel(
           conditionalPanel("output.hasModel == true",
-            tabsetPanel(id="mainTabs", type="pills",
+            tabsetPanel(id="mainTabs", type="tabs",
               tabPanel("Analysis",
                 tags$div(class="page-header", h2("Analysis")),
                 fluidRow(
@@ -141,26 +145,26 @@ shinyUI(tagList(
                     wellPanel(withSpinner(plotOutput("evaluationStability")))
                   )
                 )
-              ),
-              tabPanel("Prediction",
-                div(h2("Prediction"), class="page-header"),
-                fluidRow(
-                  column(width = 4,
-                    wellPanel(
-                      fileInput("predictFile", "Prediction data"),
-                      actionButton("predictButton", "Predict", class="btn-primary")
-                    )
-                  ),
-                  column(width = 8,
-                    conditionalPanel("output.hasPredictions == true",
-                      wellPanel(
-                        dataTableOutput("predictionsTable"),
-                        downloadButton("dlPredictionsTable", "Download table", class="btn-sm")
-                      )
-                    )
-                  )
-                )
               )
+              #tabPanel("Prediction",
+              #  div(h2("Prediction"), class="page-header"),
+              #  fluidRow(
+              #    column(width = 4,
+              #      wellPanel(
+              #        fileInput("predictFile", "Prediction data"),
+              #        actionButton("predictButton", "Predict", class="btn-primary")
+              #      )
+              #    ),
+              #    column(width = 8,
+              #      conditionalPanel("output.hasPredictions == true",
+              #        wellPanel(
+              #          dataTableOutput("predictionsTable"),
+              #          downloadButton("dlPredictionsTable", "Download table", class="btn-sm")
+              #        )
+              #      )
+              #    )
+              #  )
+              #)
             )
           )
         )

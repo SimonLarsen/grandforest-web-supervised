@@ -94,8 +94,17 @@
   color: #FFFFFF;
 }
 
+#mainTabs {
+  display: flex;
+}
+
+#mainTabs > li {
+  width: 100%;
+}
+
 #mainTabs > li > a {
   font-size: 20px;
+  text-align: center;
 }
 
 #enrichmentTable table {

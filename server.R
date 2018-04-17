@@ -59,6 +59,10 @@ shinyServer(function(input, output, session) {
       alert("Missing dependent variable name.")
       return()
     }
+    if(input$modelType == "survival" && input$statusvar == "") {
+      alert("Missing status variable for survival model.")
+      return()
+    }
 
     withProgress(value=0, message="Training grand forest", {
       # Read data file
@@ -67,6 +71,7 @@ shinyServer(function(input, output, session) {
         D <- readRDS(EXAMPLE_DATA_PATH)
         depvar <- EXAMPLE_DATA_DEPVAR
         modelType <- EXAMPLE_DATA_MODELTYPE
+        statusvar <- NULL
       } else {
         D <- tryCatch(
           read_expression_file(input$file$datapath),
@@ -75,10 +80,15 @@ shinyServer(function(input, output, session) {
         if(is.null(D)) return()
         depvar <- input$depvar
         modelType <- input$modelType
+        statusvar <- if(modelType == "survival") input$statusvar else NULL
       }
 
-      if((!depvar %in% colnames(D))) {
-        alert("Dependent variable name does not match any column name in data file.")
+      if(!(depvar %in% colnames(D))) {
+        alert("Dependent variable name does not match any column in data file.")
+        return()
+      }
+      if(modelType == "survival" && !(statusvar %in% colnames(D))) {
+        alert("Status variable name does not match any column in data file.")
         return()
       }
 
@@ -89,19 +99,20 @@ shinyServer(function(input, output, session) {
 
       all_nodes <- unique(c(edges$from, edges$to))
       found_genes <- intersect(colnames(D), all_nodes)
-      missing_genes <- setdiff(setdiff(colnames(D), depvar), all_nodes)
+      missing_genes <- setdiff(setdiff(colnames(D), c(depvar,statusvar)), all_nodes)
 
       # Scale and center data
       setProgress(value=0.3, detail="Normalizing data")
       D <- tryCatch({
         Ds <- scale(D[,found_genes,with=FALSE], center=TRUE, scale=TRUE)
         Ds[is.na(Ds)] <- 0
-        data.table(D[[depvar]], Ds)
+        data.table(D[,c(depvar,statusvar),with=FALSE], Ds)
       }, error = function(e) {
         alert("Normalization failed. Not all columns are numeric.")
         return()
       })
       colnames(D)[1] <- depvar
+      if(modelType == "survival") colnames(D)[2] <- statusvar
 
       # convert dependent variable to correct type
       if(modelType == "classification" || modelType == "probability") {
@@ -110,8 +121,17 @@ shinyServer(function(input, output, session) {
           alert(sprintf("Dependent variable contains too many different classes. Only up to %d allowed.", MAX_NUM_CLASSES))
           return()
         }
-      } else {
+      } else if(modelType == "survival") {
         D[[depvar]] <- as.numeric(D[[depvar]])
+        D[[statusvar]] <- as.numeric(D[[statusvar]])
+        if(any(D[[statusvar]] < 0 | D[[statusvar]] > 1, na.rm=TRUE)) {
+          alert("Survival status variable could not be coerced to 0 and 1.")
+          return()
+        }
+      } else if(modelType == "regression") {
+        D[[depvar]] <- as.numeric(D[[depvar]])
+      } else {
+        alert("Encountered unknown model type."); return()
       }
 
       # Train grand forest model
@@ -119,6 +139,7 @@ shinyServer(function(input, output, session) {
       fit <- grandforest(
         data=D, graph_data=edges,
         dependent.variable.name=depvar,
+        status.variable.name=statusvar,
         probability=(modelType=="probability"),
         num.trees=input$ntrees,
         importance="impurity"
@@ -128,8 +149,9 @@ shinyServer(function(input, output, session) {
       currentData(D)
       currentModel(list(
         fit=fit,
-        depvar=depvar,
         type=modelType,
+        depvar=depvar,
+        statusvar=statusvar,
         found_genes=found_genes,
         missing_genes=missing_genes
       ))
@@ -143,6 +165,10 @@ shinyServer(function(input, output, session) {
   observeEvent(input$predictButton, {
     if(!isTruthy(input$predictFile)) {
       alert("Please upload a data set for prediction.")
+      return()
+    }
+    if(currentModel()$type == "survival") {
+      alert("Prediction not supported for survival data.")
       return()
     }
 
@@ -292,6 +318,11 @@ shinyServer(function(input, output, session) {
       alert(paste0("Number of trees must be >= ", MIN_NUM_TREES, " and <= ", MAX_NUM_TREES, "."))
       return()
     }
+    if(currentModel()$type == "survival") {
+      alert("Model evaluation not supported for survival data.")
+      return()
+    }
+    
     D <- currentData()
     edges <- currentEdges()
     depvar <- currentModel()$depvar
