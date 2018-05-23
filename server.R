@@ -65,6 +65,10 @@ shinyServer(function(input, output, session) {
       alert("Please select an expression data file and wait for it upload before submitting")
       return()
     }
+    if(input$useExampleData && input$species != "human") {
+      alert("Please set species to \"Homo sapiens\" when using example data.")
+      return()
+    }
     if(input$ntrees < MIN_NUM_TREES || input$ntrees > MAX_NUM_TREES) {
       alert(paste0("Number of trees must be >= ", MIN_NUM_TREES, " and <= ", MAX_NUM_TREES, "."))
       return()
