@@ -16,6 +16,7 @@ source("evaluation.R")
 shinyServer(function(input, output, session) {
   currentEdges <- reactiveVal()
   currentData <- reactiveVal()
+  currentSpecies <- reactiveVal()
   currentModel <- reactiveVal()
   currentEnrichmentTable <- reactiveVal()
   currentTargetsTable <- reactiveVal()
@@ -29,14 +30,14 @@ shinyServer(function(input, output, session) {
   outputOptions(output, "hasModel", suspendWhenHidden=FALSE)
 
   output$hasEnrichmentTable <- reactive({
-    D <- req(currentEnrichmentTable())
-    return(nrow(D) > 0)
+    req(currentEnrichmentTable())
+    return(TRUE)
   })
   outputOptions(output, "hasEnrichmentTable", suspendWhenHidden=FALSE)
 
   output$hasTargetsTable <- reactive({
-    D <- req(currentTargetsTable())
-    return(nrow(D) > 0)
+    req(currentTargetsTable())
+    return(TRUE)
   })
   outputOptions(output, "hasTargetsTable", suspendWhenHidden=FALSE)
 
@@ -45,6 +46,19 @@ shinyServer(function(input, output, session) {
     return(TRUE)
   })
   outputOptions(output, "hasPredictions", suspendWhenHidden=FALSE)
+
+  output$currentSpecies <- reactive({
+    currentSpecies()
+  })
+  outputOptions(output, "currentSpecies", suspendWhenHidden=FALSE)
+
+  output$graphSelect <- renderUI({
+    selectInput("graph", "Network", get_network_options(input$species))
+  })
+
+  output$enrichmentTypeSelect <- renderUI({
+    selectInput("enrichmentType", "Enrichment type", gene_set_enrichment_types(currentSpecies()))
+  })
 
   observeEvent(input$submitButton, {
     if(!input$useExampleData && !isTruthy(input$file)) {
@@ -95,11 +109,15 @@ shinyServer(function(input, output, session) {
       # Read graph file
       setProgress(value=0.2, detail="Preparing network")
       edges <- readRDS(get_network_file(input$graph))
-      currentEdges(edges)
 
       all_nodes <- unique(c(edges$from, edges$to))
       found_genes <- intersect(colnames(D), all_nodes)
       missing_genes <- setdiff(setdiff(colnames(D), c(depvar,statusvar)), all_nodes)
+
+      if(length(found_genes) == 0) {
+        alert("No expression was found for any genes in the network. Make sure you chose the right species, and that gene IDs are NCBI Entrez ID.")
+        return()
+      }
 
       # Scale and center data
       setProgress(value=0.3, detail="Normalizing data")
@@ -111,6 +129,7 @@ shinyServer(function(input, output, session) {
         alert("Normalization failed. Not all columns are numeric.")
         return()
       })
+      if(is.null(D)) return()
       colnames(D)[1] <- depvar
       if(modelType == "survival") colnames(D)[2] <- statusvar
 
@@ -146,7 +165,9 @@ shinyServer(function(input, output, session) {
       )
 
       setProgress(value=0.9, detail="Finishing up")
+      currentEdges(edges)
       currentData(D)
+      currentSpecies(input$species)
       currentModel(list(
         fit=fit,
         type=modelType,
@@ -182,7 +203,7 @@ shinyServer(function(input, output, session) {
         error = function(e) { alert(e$message); return(NULL) }
       )
       if(is.null(D)) return()
-      
+
       setProgress(value=0.4, detail="Computing predictions")
       fit <- currentModel()$fit
       preds <- predict(fit, data=D)
@@ -197,8 +218,7 @@ shinyServer(function(input, output, session) {
     imp <- importance(currentModel()$fit)
 
     genes <- names(imp)
-    symbols <- map_ids_fallback(genes, "SYMBOL", "ENTREZID")
-
+    symbols <- map_ids_fallback(genes, "SYMBOL", "ENTREZID", currentSpecies())
     D <- data.table(gene=genes, name=symbols, importance=imp)
     D[order(D$importance, decreasing=TRUE),]
   })
@@ -273,7 +293,7 @@ shinyServer(function(input, output, session) {
       universe <- setdiff(colnames(D), depvar)
 
       setProgress(value=0.2, detail="Computing enrichment")
-      out <- gene_set_enrichment(genes, universe, input$enrichmentType, input$enrichmentPvalueCutoff, input$enrichmentQvalueCutoff)
+      out <- gene_set_enrichment(genes, currentSpecies(), universe, input$enrichmentType, input$enrichmentPvalueCutoff, input$enrichmentQvalueCutoff)
 
       setProgress(value=0.9, detail="Finishing up")
       currentEnrichmentTable(out)
@@ -281,13 +301,16 @@ shinyServer(function(input, output, session) {
   })
 
   output$enrichmentTable <- renderDataTable({
-    D <- req(as.data.frame(currentEnrichmentTable()))
+    res <- req(currentEnrichmentTable())
+    D <- as.data.frame(currentEnrichmentTable())
+    validate(need(nrow(D) > 0, "No significantly enriched gene sets found."))
     D <- get_gene_set_enrichment_links(D, isolate(input$enrichmentType))
     return(D)
   }, options = list(pageLength=10, scrollX=TRUE), escape=FALSE)
 
   output$enrichmentPlot <- renderPlot({
     D <- req(currentEnrichmentTable())
+    validate(need(nrow(D) > 0, "No significantly enriched gene sets found."))
     DOSE::dotplot(D, showCategory=20)
   })
 
@@ -322,7 +345,7 @@ shinyServer(function(input, output, session) {
       alert("Model evaluation not supported for survival data.")
       return()
     }
-    
+
     D <- currentData()
     edges <- currentEdges()
     depvar <- currentModel()$depvar
@@ -389,8 +412,8 @@ shinyServer(function(input, output, session) {
       edges <- subset(edges, from %in% features$gene & to %in% features$gene)
       D <- data.frame(from=edges$from, type=".", to=edges$to)
       if(input$featureGraphGeneSymbols) {
-        D$from <- map_ids_fallback(as.character(D$from), "SYMBOL", "ENTREZID")
-        D$to <- map_ids_fallback(as.character(D$to), "SYMBOL", "ENTREZID")
+        D$from <- map_ids_fallback(as.character(D$from), "SYMBOL", "ENTREZID", currentSpecies())
+        D$to <- map_ids_fallback(as.character(D$to), "SYMBOL", "ENTREZID", currentSpecies())
       }
       write.table(D, file, row.names=FALSE, col.names=FALSE, sep="\t", quote=FALSE)
     }

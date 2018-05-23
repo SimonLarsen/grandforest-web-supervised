@@ -38,13 +38,11 @@ shinyUI(tagList(
             )
           ),
           numericInput("ntrees", tooltip_label("Number of decision trees", "How many decision trees to train. Larger number produces better results but takes longer to compute."), DEFAULT_NUM_TREES, min = MIN_NUM_TREES, max = MAX_NUM_TREES),
-          selectInput("graph", "Network", list(
-            "IID, Human, Experimental only" = "iidexp",
-            "IID, Human" = "iidall",
-            "RegNetwork" = "regnetwork",
-            "BioGRID" = "biogrid",
-            "HTRIdb" = "htri"
+          selectInput("species", "Species", list(
+            "Homo sapiens" = "human",
+            "Mus musculus" = "mouse"
           )),
+          uiOutput("graphSelect"),
           actionButton("submitButton", "Train grand forest", class = "btn-primary"),
           conditionalPanel("output.hasModel == true",
             h3("Model summary"),
@@ -86,7 +84,7 @@ shinyUI(tagList(
                   ),
                   tabPanel("Gene set enrichment",
                     fluidRow(
-                      column(width=4, selectInput("enrichmentType", "Enrichment type", gene_set_enrichment_types())),
+                      column(width=4, uiOutput("enrichmentTypeSelect")),
                       column(width=4, numericInput("enrichmentPvalueCutoff", "p-value cutoff", value=0.05, min=0, max=1, step=0.01)),
                       column(width=4, numericInput("enrichmentQvalueCutoff", "q-value cutoff", value=0.2, min=0, max=1, step=0.01))
                     ),
@@ -103,20 +101,25 @@ shinyUI(tagList(
                     )
                   ),
                   tabPanel("Drug/miRNA targets",
-                    selectInput("targetsType", "Database", gene_target_sources()),
-                    actionButton("targetsButton", "Get gene targets", class="btn-primary"),
-                    conditionalPanel("output.hasTargetsTable == true",
-                      hr(),
-                      tabsetPanel(type="tabs",
-                        tabPanel("Table",
-                          withSpinner(dataTableOutput("targetsTable")),
-                          downloadButton("dlTargetsTable", "Download table", class="btn-sm")
-                        ),
-                        tabPanel("Network",
-                          withSpinner(visNetworkOutput("targetsNetwork")),
-                          checkboxInput("targetsNetworkSymbols", "Show gene symbols", value=TRUE)
+                    conditionalPanel("output.currentSpecies == 'human'", 
+                      selectInput("targetsType", "Database", gene_target_sources()),
+                      actionButton("targetsButton", "Get gene targets", class="btn-primary"),
+                      conditionalPanel("output.hasTargetsTable == true",
+                        hr(),
+                        tabsetPanel(type="tabs",
+                          tabPanel("Table",
+                            withSpinner(dataTableOutput("targetsTable")),
+                            downloadButton("dlTargetsTable", "Download table", class="btn-sm")
+                          ),
+                          tabPanel("Network",
+                            withSpinner(visNetworkOutput("targetsNetwork")),
+                            checkboxInput("targetsNetworkSymbols", "Show gene symbols", value=TRUE)
+                          )
                         )
                       )
+                    ),
+                    conditionalPanel("output.currentSpecies != 'human'",
+                      div(class="alert alert-info", "Drug/miRNA target search only supported for Homo sapiens.")
                     )
                   )
                 ))
