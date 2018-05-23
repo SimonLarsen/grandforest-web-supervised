@@ -68,7 +68,7 @@ evaluation_cv <- function(D, depvar, modelType, edges, ntrees, cvFolds, cvRepeti
     for(rep in 1:cvRepetitions) {
       fits <- c()
       rep.scores <- data.frame()
-      folds <- createFolds(D[[depvar]], k=cvFolds, returnTrain=TRUE, list=TRUE)
+      folds <- caret::createFolds(D[[depvar]], k=cvFolds, returnTrain=TRUE, list=TRUE)
       
       for(i in 1:cvFolds) {
         setProgress(value=(rep-1)*cvFolds+(i-1), detail=paste("Repetition ", rep, " Fold", i))
