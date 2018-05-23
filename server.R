@@ -323,11 +323,15 @@ shinyServer(function(input, output, session) {
   })
 
   output$targetsTable <- renderDataTable({
-    get_gene_targets_table(currentTargetsTable(), isolate(input$targetsType))
+    D <- req(currentTargetsTable())
+    validate(need(nrow(D) > 0, "No targets found."))
+    get_gene_targets_table(D, isolate(input$targetsType))
   }, options = list(pageLength=10, scrollX=TRUE), escape=FALSE)
 
   output$targetsNetwork <- renderVisNetwork({
-    get_gene_targets_network(currentTargetsTable(), isolate(input$targetsType), input$targetsNetworkSymbols)
+    D <- req(currentTargetsTable())
+    validate(need(nrow(D) > 0, "No targets found."))
+    get_gene_targets_network(D, isolate(input$targetsType), input$targetsNetworkSymbols)
   })
 
   output$predictionsTable <- renderDataTable({
