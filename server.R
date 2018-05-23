@@ -305,8 +305,7 @@ shinyServer(function(input, output, session) {
   })
 
   output$enrichmentTable <- renderDataTable({
-    res <- req(currentEnrichmentTable())
-    D <- as.data.frame(currentEnrichmentTable())
+    D <- as.data.frame(req(currentEnrichmentTable()))
     validate(need(nrow(D) > 0, "No significantly enriched gene sets found."))
     D <- get_gene_set_enrichment_links(D, isolate(input$enrichmentType))
     return(D)
