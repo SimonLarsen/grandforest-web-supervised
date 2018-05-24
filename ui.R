@@ -60,7 +60,7 @@ shinyUI(tagList(
                   column(width=6,
                     h3("Feature subnetwork"),
                     wellPanel(
-                      withSpinner(visNetworkOutput("featureGraph")),
+                      withSpinner(visNetworkOutput("featureGraph", height=450)),
                       fluidRow(
                         column(width=4, downloadButton("dlFeatureGraph", "Download network", class="btn-sm")),
                         column(width=4, checkboxInput("featureGraphGeneSymbols", "Show gene symbols", value=TRUE))
@@ -71,7 +71,10 @@ shinyUI(tagList(
                     h3("Heatmap"),
                     wellPanel(
                       withSpinner(plotOutput("featureHeatmap", height=500)),
-                      downloadButton("dlFeatureHeatmap", "Download heatmap", class="btn-sm")
+                      fluidRow(
+                        column(width=4, downloadButton("dlFeatureHeatmap", "Download heatmap", class="btn-sm")),
+                        column(width=4, checkboxInput("featureHeatmapGeneSymbol", "Show gene symbols", value=TRUE))
+                      )
                     )
                   )
                 ),
@@ -149,25 +152,6 @@ shinyUI(tagList(
                   )
                 )
               )
-              #tabPanel("Prediction",
-              #  div(h2("Prediction"), class="page-header"),
-              #  fluidRow(
-              #    column(width = 4,
-              #      wellPanel(
-              #        fileInput("predictFile", "Prediction data"),
-              #        actionButton("predictButton", "Predict", class="btn-primary")
-              #      )
-              #    ),
-              #    column(width = 8,
-              #      conditionalPanel("output.hasPredictions == true",
-              #        wellPanel(
-              #          dataTableOutput("predictionsTable"),
-              #          downloadButton("dlPredictionsTable", "Download table", class="btn-sm")
-              #        )
-              #      )
-              #    )
-              #  )
-              #)
             )
           )
         )

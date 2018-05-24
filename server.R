@@ -123,19 +123,8 @@ shinyServer(function(input, output, session) {
         return()
       }
 
-      # Scale and center data
-      setProgress(value=0.3, detail="Normalizing data")
-      D <- tryCatch({
-        Ds <- scale(D[,found_genes,with=FALSE], center=TRUE, scale=TRUE)
-        Ds[is.na(Ds)] <- 0
-        data.table(D[,c(depvar,statusvar),with=FALSE], Ds)
-      }, error = function(e) {
-        alert("Normalization failed. Not all columns are numeric.")
-        return()
-      })
-      if(is.null(D)) return()
-      colnames(D)[1] <- depvar
-      if(modelType == "survival") colnames(D)[2] <- statusvar
+      # Extract valid features
+      D <- D[,c(depvar,statusvar,found_genes),with=FALSE]
 
       # convert dependent variable to correct type
       if(modelType == "classification" || modelType == "probability") {
@@ -158,7 +147,7 @@ shinyServer(function(input, output, session) {
       }
 
       # Train grand forest model
-      setProgress(value=0.5, detail="Training model")
+      setProgress(value=0.3, detail="Training model")
       fit <- grandforest(
         data=D, graph_data=edges,
         dependent.variable.name=depvar,
@@ -270,15 +259,67 @@ shinyServer(function(input, output, session) {
     depvar <- currentModel()$depvar
     features <- head(featureTable(), n=input$nfeatures)
     D <- currentData()
-    groups <- NULL
+    anno <- NULL
+    gaps_row <- NULL
+    
     if(currentModel()$type == "classification" || currentModel()$type == "probability") {
-      groups <- as.factor(D[[depvar]])
+      anno <- data.frame(as.factor(D[[depvar]]))
+      colnames(anno) <- depvar
+      row_order <- order(anno[[depvar]])
+    
+      gaps_row <- cumsum(table(anno$class))
+      gaps_row <- head(gaps_row, length(gaps_row)-1)
     }
-    D <- D[,features$gene,with=FALSE]
-    colnames(D) <- paste0(features$gene, " (", features$name, ")")
-
-    col.ramp <- circlize::colorRamp2(c(-2, 0, 2), c("magenta", "black", "green"))
-    ComplexHeatmap::Heatmap(D, name="expression", split=groups, col=col.ramp)
+    else if(currentModel()$type == "regression") {
+      anno <- data.frame(as.numeric(D[[depvar]]))
+      colnames(anno) <- depvar
+      row_order <- order(anno[[depvar]])
+    }
+    else if(currentModel()$type == "survival") {
+      anno <- data.frame(
+        time = as.numeric(D[[depvar]]),
+        status = as.factor(D[[currentModel()$statusvar]])
+      )
+      row_order <- order(anno$time)
+    }
+    rownames(anno) <- paste0("p", seq_len(nrow(anno)))
+    
+    D <- scale(D[,features$gene,with=FALSE])
+    rownames(D) <- paste0("p", seq_len(nrow(D)))
+    if(input$featureHeatmapGeneSymbol) {
+      colnames(D) <- features$name
+    }
+    
+    D[D >  2] <-  2
+    D[D < -2] <- -2
+    
+    pheatmap::pheatmap(
+      D[row_order,],
+      color = colorRampPalette(c("magenta","black","green"))(100),
+      annotation_row=anno,
+      cluster_rows=FALSE,
+      show_rownames=FALSE,
+      gaps_row = gaps_row
+    )
+    
+    #superheat::superheat(
+    #  D,
+    #  membership.rows=anno$class,
+    #  heat.pal = c("magenta","black","green"),
+    #  left.label.text.angle = 90,
+    #  left.label.text.alignment = "center",
+    #  left.label.size = 0.1,
+    #  bottom.label.text.angle = 90,
+    #  bottom.label.text.alignment = "right",
+    #  bottom.label.size = 0.25,
+    #  yt.plot.size = 0.2,
+    #  heat.lim = c(-1.5, 1.5),
+    #  legend.breaks = c(-1.5, 0, 1.5),
+    #  grid.vline = FALSE,
+    #  grid.hline = FALSE,
+    #  col.dendrogram = TRUE,
+    #  legend.vspace = 0.05
+    #)
   })
 
   output$featureHeatmap <- renderPlot({
@@ -429,8 +470,9 @@ shinyServer(function(input, output, session) {
   output$dlFeatureHeatmap <- downloadHandler(
     filename = "heatmap.pdf",
     content = function(file) {
-      pdf(file=file, width=10, height=10)
-      print(featureHeatmapPlot())
+      p <- featureHeatmapPlot()
+      pdf(file=file, width=9, height=9)
+      print(p)
       dev.off()
     }
   )
