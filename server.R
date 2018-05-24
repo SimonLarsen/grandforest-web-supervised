@@ -267,7 +267,7 @@ shinyServer(function(input, output, session) {
       colnames(anno) <- depvar
       row_order <- order(anno[[depvar]])
     
-      gaps_row <- cumsum(table(anno$class))
+      gaps_row <- cumsum(table(anno[[depvar]]))
       gaps_row <- head(gaps_row, length(gaps_row)-1)
     }
     else if(currentModel()$type == "regression") {
