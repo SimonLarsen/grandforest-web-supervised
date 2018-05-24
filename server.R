@@ -267,8 +267,7 @@ shinyServer(function(input, output, session) {
       colnames(anno) <- depvar
       row_order <- order(anno[[depvar]])
     
-      gaps_row <- cumsum(table(anno[[depvar]]))
-      gaps_row <- head(gaps_row, length(gaps_row)-1)
+      gaps_row <- head(cumsum(table(anno[[depvar]])), -1)
     }
     else if(currentModel()$type == "regression") {
       anno <- data.frame(as.numeric(D[[depvar]]))
@@ -301,25 +300,6 @@ shinyServer(function(input, output, session) {
       show_rownames=FALSE,
       gaps_row = gaps_row
     )
-    
-    #superheat::superheat(
-    #  D,
-    #  membership.rows=anno$class,
-    #  heat.pal = c("magenta","black","green"),
-    #  left.label.text.angle = 90,
-    #  left.label.text.alignment = "center",
-    #  left.label.size = 0.1,
-    #  bottom.label.text.angle = 90,
-    #  bottom.label.text.alignment = "right",
-    #  bottom.label.size = 0.25,
-    #  yt.plot.size = 0.2,
-    #  heat.lim = c(-1.5, 1.5),
-    #  legend.breaks = c(-1.5, 0, 1.5),
-    #  grid.vline = FALSE,
-    #  grid.hline = FALSE,
-    #  col.dendrogram = TRUE,
-    #  legend.vspace = 0.05
-    #)
   })
 
   output$featureHeatmap <- renderPlot({
