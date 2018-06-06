@@ -105,7 +105,12 @@ shinyUI(tagList(
                   ),
                   tabPanel("Drug/miRNA targets",
                     conditionalPanel("output.currentSpecies == 'human'", 
-                      selectInput("targetsType", "Database", gene_target_sources()),
+                      fluidRow(
+                        column(width=4, selectInput("targetsType", "Database", gene_target_sources())),
+                        column(width=2, checkboxInput("targetsFilter", "Filter results", value=FALSE)),
+                        column(width=3, numericInput("targetsPvalueCutoff", "p-value cutoff", value=0.05, min=0, max=1, step=0.01)),
+                        column(width=3, numericInput("targetsQvalueCutoff", "q-value cutoff", value=0.2,  min=0, max=1, step=0.01))
+                      ),
                       actionButton("targetsButton", "Get gene targets", class="btn-primary"),
                       conditionalPanel("output.hasTargetsTable == true",
                         hr(),

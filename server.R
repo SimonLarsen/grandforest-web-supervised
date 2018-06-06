@@ -340,22 +340,24 @@ shinyServer(function(input, output, session) {
 
   observeEvent(input$targetsButton, {
     req(featureTable())
-    features <- head(featureTable(), input$nfeatures)
-    genes <- as.character(features$gene)
-    out <- get_gene_targets(genes, input$targetsType)
-    currentTargetsTable(out)
+    withProgress(message="Doing stuff", {
+      features <- head(featureTable(), input$nfeatures)
+      genes <- as.character(features$gene)
+      out <- get_gene_targets(genes, input$targetsType, input$targetsFilter, input$targetsPvalueCutoff, input$targetsQvalueCutoff)
+      currentTargetsTable(out)
+    })
   })
 
   output$targetsTable <- renderDataTable({
     D <- req(currentTargetsTable())
     validate(need(nrow(D) > 0, "No targets found."))
-    get_gene_targets_table(D, isolate(input$targetsType))
+    get_gene_targets_table(D)
   }, options = list(pageLength=10, scrollX=TRUE), escape=FALSE)
 
   output$targetsNetwork <- renderVisNetwork({
     D <- req(currentTargetsTable())
     validate(need(nrow(D) > 0, "No targets found."))
-    get_gene_targets_network(D, isolate(input$targetsType), input$targetsNetworkSymbols)
+    get_gene_targets_network(D, isolate(input$targetsType), input$targetsNetworkSymbols, currentSpecies())
   })
 
   output$predictionsTable <- renderDataTable({
