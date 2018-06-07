@@ -21,7 +21,7 @@ shinyUI(tagList(
   navbarPage("Grand Forest • Supervised", footer=column(width=12, hr(), p(paste0("Grand Forest • Supervised workflow • Version ", APP_VERSION))), inverse=TRUE,
     tabPanel(HTML("Analysis</a></li><li><a href=\"https://grandforest.compbio.sdu.dk/guide/supervised\" target=_blank>User guide</a></li><li><a href=\"https://grandforest.compbio.sdu.dk/#cite\" target=_blank>Cite"),
       sidebarLayout(
-        sidebarPanel(width = 3,
+        sidebarPanel(width=3,
           tags$h3("Train model", class="sidebar-top-heading"),
           checkboxInput("useExampleData", "Use example data"),
           conditionalPanel("input.useExampleData == false",
@@ -51,7 +51,7 @@ shinyUI(tagList(
             sliderInput("nfeatures", tooltip_label("Module size", "Number of features to extract, ranked by importance."), min=MIN_NUM_FEATURES, max=MAX_NUM_FEATURES, value=DEFAULT_NUM_FEATURES, step=1, width = "400px")
           )
         ),
-        mainPanel(
+        mainPanel(width=9,
           conditionalPanel("output.hasModel == true",
             tabsetPanel(id="mainTabs", type="tabs",
               tabPanel("Analysis",
