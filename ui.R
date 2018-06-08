@@ -44,7 +44,7 @@ shinyUI(tagList(
           )),
           uiOutput("graphSelect"),
           conditionalPanel("input.graph == 'custom'",
-            fileInput("graphFile", tooltip_label("Network file", "See `User guide` for a description of supported file formats."))
+            fileInput("graphFile", HTML("Network file <a href=\"https://grandforest.compbio.sdu.dk/guide/network\" target=\"_blank\">(file format guide)</a>"))
           ),
           actionButton("submitButton", "Train grand forest", class = "btn-primary"),
           conditionalPanel("output.hasModel == true",
