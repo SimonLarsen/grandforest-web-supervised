@@ -65,6 +65,10 @@ shinyServer(function(input, output, session) {
       alert("Please select an expression data file and wait for it upload before submitting")
       return()
     }
+    if(input$graph == "custom" && !isTruthy(input$graphFile)) {
+      alert("Please select a network file and wait for it to upload before submitting.")
+      return()
+    }
     if(input$useExampleData && input$species != "human") {
       alert("Please set species to \"Homo sapiens\" when using example data.")
       return()
@@ -83,8 +87,20 @@ shinyServer(function(input, output, session) {
     }
 
     withProgress(value=0, message="Training grand forest", {
+      # Read graph file
+      setProgress(value=0.1, detail="Preparing network")
+      if(input$graph == "custom") {
+        edges <- tryCatch(
+          read_network_file(input$graphFile$datapath),
+          error = function(e) { alert(e$message); return(NULL) }
+        )
+        if(is.null(edges)) return()
+      } else {
+        edges <- readRDS(get_network_file(input$graph))
+      }
+
       # Read data file
-      setProgress(value=0.1, detail="Reading data file")
+      setProgress(value=0.2, detail="Reading data file")
       if(input$useExampleData) {
         D <- readRDS(EXAMPLE_DATA_PATH)
         depvar <- EXAMPLE_DATA_DEPVAR
@@ -110,17 +126,17 @@ shinyServer(function(input, output, session) {
         return()
       }
 
-      # Read graph file
-      setProgress(value=0.2, detail="Preparing network")
-      edges <- readRDS(get_network_file(input$graph))
-
       all_nodes <- unique(c(edges$from, edges$to))
       found_genes <- intersect(colnames(D), all_nodes)
       missing_genes <- setdiff(setdiff(colnames(D), c(depvar,statusvar)), all_nodes)
+      found_pct <- length(found_genes) / (length(found_genes) + length(missing_genes))
 
       if(length(found_genes) == 0) {
-        alert("No expression was found for any genes in the network. Make sure you chose the right species, and that gene IDs are NCBI Entrez ID.")
+        alert("No expression was found for any genes in the network. Make sure you chose the right species, and that all gene IDs are NCBI Entrez ID.")
         return()
+      }
+      if(found_pct < MISSING_GENE_WARNING) {
+        alert(sprintf("Only %.2f %% of genes in the data set were found in the network. Make sure you chose the right species, and that all gene IDs are NCBI Entrez ID.", found_pct*100))
       }
 
       # Extract valid features
