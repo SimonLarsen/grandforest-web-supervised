@@ -1,4 +1,4 @@
-options(shiny.maxRequestSize=400*1024^2)
+options(shiny.maxRequestSize=500*1024^2)
 options(spinner.type=5)
 
 APP_VERSION <- "0.1-preview"
