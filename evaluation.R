@@ -1,3 +1,5 @@
+source("createFolds.R")
+
 evaluation_stability <- function(fits, sizes=c(1,5,10,20,40)) {
   features <- lapply(fits, function(fit) {
     imp <- importance(fit)
@@ -20,12 +22,12 @@ evaluation_stability <- function(fits, sizes=c(1,5,10,20,40)) {
 evaluation_classification <- function(preds, labels) {
   if(length(levels(labels)) == 2) {
     data.frame(
-      `F1 score` = caret::confusionMatrix(preds, labels)$byClass["F1"],
+      `F1 score` = confusionMatrix(preds, labels)$byClass["F1"],
       `Matthews correlation coefficient` = mccr::mccr(as.numeric(preds)-1, as.numeric(labels)-1),
       check.names = FALSE
     )
   } else {
-    cm <- caret::confusionMatrix(preds, labels)$byClass
+    cm <- confusionMatrix(preds, labels)$byClass
     mprec <- mean(cm[,"Precision"])
     mrec <- mean(cm[,"Recall"])
     
@@ -68,7 +70,7 @@ evaluation_cv <- function(D, depvar, modelType, edges, ntrees, cvFolds, cvRepeti
     for(rep in 1:cvRepetitions) {
       fits <- c()
       rep.scores <- data.frame()
-      folds <- caret::createFolds(D[[depvar]], k=cvFolds, returnTrain=TRUE, list=TRUE)
+      folds <- createFolds(D[[depvar]], k=cvFolds, returnTrain=TRUE, list=TRUE)
       
       for(i in 1:cvFolds) {
         setProgress(value=(rep-1)*cvFolds+(i-1), detail=paste("Repetition ", rep, " Fold", i))

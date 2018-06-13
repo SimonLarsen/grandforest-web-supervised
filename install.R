@@ -1,4 +1,4 @@
-install.packages(c('devtools','shiny', 'shinyjs', 'visNetwork', 'data.table', 'magrittr', 'circlize', 'ggplot2', 'e1071', 'caret', 'mccr'))
+install.packages(c('devtools','shiny', 'shinyjs', 'visNetwork', 'data.table', 'magrittr', 'circlize', 'ggplot2', 'mccr'))
 
 source('https://bioconductor.org/biocLite.R')
 biocLite('qvalue', ask=FALSE)
