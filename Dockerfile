@@ -1,4 +1,4 @@
-FROM grandforest-web-common
+FROM simonlarsen/grandforest-web-common
 MAINTAINER Simon J. Larsen <simonhffh@gmail.com>
 
 COPY . /srv/shiny-server
